@@ -44,9 +44,11 @@ jobs:
           cp -r /tmp/mobile_src/assets/* assets/ 2>/dev/null || true
           rm -f test/widget_test.dart
 
-          echo 'assets:' >> pubspec.yaml
-          echo '  - assets/logo.png' >> pubspec.yaml
-          echo '  - assets/app_icon_padded.png' >> pubspec.yaml
+          # Add assets properly to flutter section in pubspec.yaml
+          sed -i 's/# assets:/assets:\n    - assets\/logo.png\n    - assets\/app_icon_padded.png/' pubspec.yaml
+          if ! grep -q "assets/logo.png" pubspec.yaml; then
+            printf "\nflutter:\n  assets:\n    - assets/logo.png\n    - assets/app_icon_padded.png\n" >> pubspec.yaml
+          fi
 
           echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
           echo '  android: "launcher_icon"' >> flutter_launcher_icons.yaml
@@ -107,9 +109,11 @@ jobs:
           cp -r /tmp/mobile_src/assets/* assets/ 2>/dev/null || true
           rm -f test/widget_test.dart
 
-          echo 'assets:' >> pubspec.yaml
-          echo '  - assets/logo.png' >> pubspec.yaml
-          echo '  - assets/app_icon_padded.png' >> pubspec.yaml
+          # Add assets properly to flutter section in pubspec.yaml
+          sed -i '' 's/# assets:/assets:\n    - assets\/logo.png\n    - assets\/app_icon_padded.png/' pubspec.yaml
+          if ! grep -q "assets/logo.png" pubspec.yaml; then
+            printf "\nflutter:\n  assets:\n    - assets/logo.png\n    - assets/app_icon_padded.png\n" >> pubspec.yaml
+          fi
 
           echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
           echo '  android: false' >> flutter_launcher_icons.yaml
