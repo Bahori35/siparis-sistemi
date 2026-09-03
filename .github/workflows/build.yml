@@ -44,17 +44,14 @@ jobs:
           cp -r /tmp/mobile_src/assets/* assets/ 2>/dev/null || true
           rm -f test/widget_test.dart
 
-          # Enable assets in pubspec.yaml
-          sed -i 's/# assets:/assets:\n    - assets\/logo.png/' pubspec.yaml
+          echo 'assets:' >> pubspec.yaml
+          echo '  - assets/logo.png' >> pubspec.yaml
 
-          # Create flutter_launcher_icons.yaml
-          cat << 'EOF' > flutter_launcher_icons.yaml
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/logo.png"
-  min_sdk_android: 21
-EOF
+          echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
+          echo '  android: true' >> flutter_launcher_icons.yaml
+          echo '  ios: true' >> flutter_launcher_icons.yaml
+          echo '  image_path: "assets/logo.png"' >> flutter_launcher_icons.yaml
+          echo '  min_sdk_android: 21' >> flutter_launcher_icons.yaml
 
           dart run flutter_launcher_icons
 
@@ -107,16 +104,13 @@ EOF
           cp -r /tmp/mobile_src/assets/* assets/ 2>/dev/null || true
           rm -f test/widget_test.dart
 
-          # Enable assets in pubspec.yaml
-          sed -i '' 's/# assets:/assets:\n    - assets\/logo.png/' pubspec.yaml
+          echo 'assets:' >> pubspec.yaml
+          echo '  - assets/logo.png' >> pubspec.yaml
 
-          # Create flutter_launcher_icons.yaml
-          cat << 'EOF' > flutter_launcher_icons.yaml
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/logo.png"
-EOF
+          echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
+          echo '  android: true' >> flutter_launcher_icons.yaml
+          echo '  ios: true' >> flutter_launcher_icons.yaml
+          echo '  image_path: "assets/logo.png"' >> flutter_launcher_icons.yaml
 
           dart run flutter_launcher_icons
 
