@@ -14,7 +14,9 @@ class CustomerMenuScreen extends StatefulWidget {
 }
 
 class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
-  int _currentTab = 0; // 0: Menü, 1: Sepet & Sipariş, 2: Siparişlerim
+  int _currentTab = 0; // 0: Menü, 1: Sepetim, 2: Siparişlerim
+  int? _selectedCategoryId; // Sol menüden seçilen kategori filtresi (null = Tümü)
+  
   Map<String, dynamic>? _shopInfo;
   List<dynamic> _menu = [];
   List<dynamic> _myOrders = [];
@@ -180,10 +182,122 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             icon: const Icon(Icons.logout, color: AppColors.danger),
             onPressed: () async {
               await auth.logout();
+              if (!context.mounted) return;
               Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
             },
           )
         ],
+      ),
+      // SOL AÇILIR MENÜ (DRAWER)
+      drawer: Drawer(
+        backgroundColor: AppColors.cardBg,
+        child: Column(
+          children: [
+            // Drawer Başlığı
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.accent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                child: const Icon(Icons.restaurant, color: Colors.white, size: 36),
+              ),
+              accountName: Text(
+                _shopInfo?['name'] ?? 'İşletme Menüsü',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              accountEmail: Text(
+                'Müşteri: ${auth.user?['full_name'] ?? ''}',
+                style: const TextStyle(fontSize: 13, color: Colors.white70),
+              ),
+            ),
+
+            // Kategori Listesi
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  // Tüm Menü Butonu
+                  ListTile(
+                    leading: const Icon(Icons.apps, color: Colors.white70),
+                    title: const Text('Tüm Menü', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    selected: _selectedCategoryId == null && _currentTab == 0,
+                    selectedTileColor: AppColors.primary.withOpacity(0.2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    onTap: () {
+                      setState(() {
+                        _selectedCategoryId = null;
+                        _currentTab = 0;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const Divider(color: Colors.white12),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text('KATEGORİLER', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+                  ),
+                  // Dinamik Kategoriler
+                  ..._menu.map((cat) {
+                    final catId = cat['category_id'] as int;
+                    final isSelected = _selectedCategoryId == catId && _currentTab == 0;
+                    return ListTile(
+                      leading: const Icon(Icons.local_cafe_outlined, color: AppColors.primary),
+                      title: Text(cat['category_name'], style: const TextStyle(color: Colors.white)),
+                      trailing: Chip(
+                        label: Text('${(cat['products'] as List).length}'),
+                        backgroundColor: AppColors.background,
+                        labelStyle: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                        padding: EdgeInsets.zero,
+                      ),
+                      selected: isSelected,
+                      selectedTileColor: AppColors.primary.withOpacity(0.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      onTap: () {
+                        setState(() {
+                          _selectedCategoryId = catId;
+                          _currentTab = 0;
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+            // Alt Kısım: Sepet ve Çıkış
+            const Divider(color: Colors.white12),
+            ListTile(
+              leading: const Icon(Icons.shopping_cart_outlined, color: AppColors.success),
+              title: const Text('Sepetim', style: TextStyle(color: Colors.white)),
+              trailing: _cart.isNotEmpty
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(12)),
+                      child: Text('${_cart.length}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    )
+                  : null,
+              onTap: () {
+                setState(() => _currentTab = 1);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history, color: AppColors.warning),
+              title: const Text('Sipariş Geçmişim', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                setState(() => _currentTab = 2);
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -220,47 +334,108 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     if (_menu.isEmpty) {
       return const Center(child: Text('Dükkanın menüsünde henüz ürün bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
     }
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _menu.length,
-      itemBuilder: (ctx, i) {
-        final category = _menu[i];
-        final products = category['products'] as List<dynamic>? ?? [];
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                category['category_name'],
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
-              ),
-            ),
-            ...products.map((p) => Card(
-              color: AppColors.cardBg,
-              margin: const EdgeInsets.only(bottom: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                title: Text(p['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                subtitle: p['description'] != null ? Text(p['description'], style: const TextStyle(color: AppColors.textMuted)) : null,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('₺${p['price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
-                    const SizedBox(width: 12),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle, color: AppColors.primary, size: 30),
-                      onPressed: () => _addToCart(p),
-                    ),
-                  ],
+    // Seçili kategori filtresi varsa sadece onu göster, yoksa tümünü
+    final filteredCategories = _selectedCategoryId == null
+        ? _menu
+        : _menu.where((c) => c['category_id'] == _selectedCategoryId).toList();
+
+    return Column(
+      children: [
+        // Kategori Seçim Barı (Üstte Hızlı Filtre Butonları)
+        Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: const Text('Tümü'),
+                  selected: _selectedCategoryId == null,
+                  selectedColor: AppColors.primary,
+                  onSelected: (selected) {
+                    if (selected) setState(() => _selectedCategoryId = null);
+                  },
                 ),
               ),
-            )),
-            const SizedBox(height: 12),
-          ],
-        );
-      },
+              ..._menu.map((cat) {
+                final catId = cat['category_id'] as int;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(cat['category_name']),
+                    selected: _selectedCategoryId == catId,
+                    selectedColor: AppColors.primary,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCategoryId = selected ? catId : null;
+                      });
+                    },
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+
+        // Ürün Listesi
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: filteredCategories.length,
+            itemBuilder: (ctx, i) {
+              final category = filteredCategories[i];
+              final products = category['products'] as List<dynamic>? ?? [];
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          category['category_name'],
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
+                        ),
+                        Text(
+                          '${products.length} ürün',
+                          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                        )
+                      ],
+                    ),
+                  ),
+                  ...products.map((p) => Card(
+                    color: AppColors.cardBg,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      title: Text(p['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      subtitle: p['description'] != null ? Text(p['description'], style: const TextStyle(color: AppColors.textMuted)) : null,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('₺${p['price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+                          const SizedBox(width: 12),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle, color: AppColors.primary, size: 30),
+                            onPressed: () => _addToCart(p),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )),
+                  const SizedBox(height: 12),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
