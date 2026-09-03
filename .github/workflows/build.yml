@@ -108,9 +108,10 @@ jobs:
           echo '  - assets/logo.png' >> pubspec.yaml
 
           echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
-          echo '  android: true' >> flutter_launcher_icons.yaml
+          echo '  android: false' >> flutter_launcher_icons.yaml
           echo '  ios: true' >> flutter_launcher_icons.yaml
           echo '  image_path: "assets/logo.png"' >> flutter_launcher_icons.yaml
+          echo '  remove_alpha_ios: true' >> flutter_launcher_icons.yaml
 
           dart run flutter_launcher_icons
 
