@@ -175,6 +175,314 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     }
   }
 
+  // =========================================================================
+  // SEÇENEK YÖNETİMİ (ÖZEL PENCERE: Ürün Seç -> Başlık Yaz -> + Butonuyla Madde Ekle)
+  // =========================================================================
+  void _openAddOptionToProductDialog({Map<String, dynamic>? preselectedProduct}) {
+    if (_products.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lütfen önce menüye en az 1 ürün ekleyin!')),
+      );
+      return;
+    }
+
+    int selectedProductId = preselectedProduct != null ? preselectedProduct['id'] : _products.first['id'];
+    
+    // Seçili ürünün mevcut seçenek listesini parse et
+    List<Map<String, dynamic>> currentGroups = [];
+    void parseExistingGroups(int prodId) {
+      currentGroups.clear();
+      final p = _products.firstWhere((item) => item['id'] == prodId, orElse: () => null);
+      if (p != null && p['options_json'] != null) {
+        try {
+          final decoded = jsonDecode(p['options_json']);
+          if (decoded is List) {
+            for (var g in decoded) {
+              currentGroups.add({
+                'title': g['title'] ?? 'Seçenek',
+                'items': List<String>.from((g['items'] as List?)?.map((e) => e.toString()) ?? []),
+              });
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    parseExistingGroups(selectedProductId);
+
+    final groupTitleCtrl = TextEditingController();
+    final itemCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return AlertDialog(
+            backgroundColor: AppColors.cardBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: const [
+                Icon(Icons.tune, color: AppColors.primary, size: 22),
+                SizedBox(width: 8),
+                Text('Ürün Seçenekleri Yönetimi', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. Ürün Seçimi
+                    const Text('1. Seçenek Eklenecek Ürün:', style: TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<int>(
+                      value: selectedProductId,
+                      dropdownColor: AppColors.cardBg,
+                      isExpanded: true,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: AppColors.background.withOpacity(0.5),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      items: _products.map<DropdownMenuItem<int>>((p) => DropdownMenuItem(
+                        value: p['id'] as int,
+                        child: Text('${p['name']} (₺${p['price']})', overflow: TextOverflow.ellipsis),
+                      )).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setModalState(() {
+                            selectedProductId = val;
+                            parseExistingGroups(selectedProductId);
+                          });
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Divider(color: Colors.white12),
+
+                    // 2. Mevcut Seçenek Grupları Listesi
+                    Text('Mevcut Seçenek Grupları (${currentGroups.length}):', style: const TextStyle(color: AppColors.accent, fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+
+                    if (currentGroups.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.background.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Bu ürüne henüz seçenek eklenmemiş. Aşağıdan yeni seçenek grubu ve seçenek maddeleri ekleyebilirsiniz.',
+                          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                        ),
+                      ),
+
+                    ...currentGroups.asMap().entries.map((entry) {
+                      final gIdx = entry.key;
+                      final g = entry.value;
+                      final items = g['items'] as List<String>;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.background.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  g['title'],
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 18),
+                                  onPressed: () {
+                                    setModalState(() {
+                                      currentGroups.removeAt(gIdx);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: items.asMap().entries.map((itemEntry) {
+                                final iIdx = itemEntry.key;
+                                final itemTxt = itemEntry.value;
+                                return Chip(
+                                  backgroundColor: AppColors.cardBg,
+                                  label: Text(itemTxt, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  deleteIcon: const Icon(Icons.close, size: 14, color: AppColors.danger),
+                                  onDeleted: () {
+                                    setModalState(() {
+                                      items.removeAt(iIdx);
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    const SizedBox(height: 12),
+                    const Divider(color: Colors.white12),
+
+                    // 3. Yeni Seçenek Grubu & Madde Ekleme Formu (+ Butonlu)
+                    const Text('2. Yeni Seçenek Grubu Ekle:', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: groupTitleCtrl,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Grup Başlığı (Örn: Şeker, Sos, Ekmek, Boyut)',
+                        labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                        filled: true,
+                        fillColor: AppColors.background.withOpacity(0.5),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: itemCtrl,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: 'Seçenek Maddesi (Örn: Sade, Az Şekerli)',
+                              labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                              filled: true,
+                              fillColor: AppColors.background.withOpacity(0.5),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onSubmitted: (_) {
+                              final title = groupTitleCtrl.text.trim();
+                              final item = itemCtrl.text.trim();
+                              if (title.isNotEmpty && item.isNotEmpty) {
+                                setModalState(() {
+                                  var existing = currentGroups.firstWhere((g) => g['title'].toString().toLowerCase() == title.toLowerCase(), orElse: () => {});
+                                  if (existing.isNotEmpty) {
+                                    (existing['items'] as List<String>).add(item);
+                                  } else {
+                                    currentGroups.add({
+                                      'title': title,
+                                      'items': <String>[item],
+                                    });
+                                  }
+                                  itemCtrl.clear();
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filled(
+                          onPressed: () {
+                            final title = groupTitleCtrl.text.trim();
+                            final item = itemCtrl.text.trim();
+                            if (title.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Lütfen önce Grup Başlığı girin!')),
+                              );
+                              return;
+                            }
+                            if (item.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Lütfen bir seçenek maddesi yazın!')),
+                              );
+                              return;
+                            }
+                            setModalState(() {
+                              var existing = currentGroups.firstWhere(
+                                (g) => g['title'].toString().toLowerCase() == title.toLowerCase(),
+                                orElse: () => {},
+                              );
+                              if (existing.isNotEmpty) {
+                                (existing['items'] as List<String>).add(item);
+                              } else {
+                                currentGroups.add({
+                                  'title': title,
+                                  'items': <String>[item],
+                                });
+                              }
+                              itemCtrl.clear();
+                            });
+                          },
+                          style: IconButton.styleFrom(backgroundColor: AppColors.primary),
+                          icon: const Icon(Icons.add, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Kapat', style: TextStyle(color: AppColors.textMuted)),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () async {
+                  final auth = Provider.of<AuthService>(context, listen: false);
+                  final selectedProd = _products.firstWhere((p) => p['id'] == selectedProductId);
+
+                  // Ürünü yeni options_json ile güncelle
+                  await http.put(
+                    Uri.parse(ApiConfig.shopProducts),
+                    headers: {
+                      'Authorization': 'Bearer ${auth.token}',
+                      'Content-Type': 'application/json'
+                    },
+                    body: jsonEncode({
+                      'id': selectedProductId,
+                      'category_id': selectedProd['category_id'],
+                      'name': selectedProd['name'],
+                      'price': selectedProd['price'],
+                      'image_url': selectedProd['image_url'],
+                      'description': selectedProd['description'],
+                      'is_available': selectedProd['is_available'] ?? 1,
+                      'options_json': currentGroups.isNotEmpty ? currentGroups : null,
+                    }),
+                  );
+
+                  if (!context.mounted) return;
+                  Navigator.pop(ctx);
+                  _loadAllData();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Seçenekler ürüne başarıyla kaydedildi!'), backgroundColor: AppColors.success),
+                  );
+                },
+                icon: const Icon(Icons.save, color: Colors.white, size: 18),
+                label: const Text('Kaydet ve Uygula', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   // ==========================================
   // ÜRÜN YÖNETİMİ (EKLE, DÜZENLE, SİL)
   // ==========================================
@@ -191,23 +499,6 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     final descCtrl = TextEditingController(text: editProduct?['description'] ?? '');
     final priceCtrl = TextEditingController(text: editProduct?['price']?.toString() ?? '');
     final imgCtrl = TextEditingController(text: editProduct?['image_url'] ?? '');
-    final optionsCtrl = TextEditingController();
-
-    // Mevcut options_json'u okunabilir metne dönüştür
-    if (editProduct?['options_json'] != null) {
-      try {
-        final decoded = jsonDecode(editProduct!['options_json']);
-        if (decoded is List) {
-          final lines = <String>[];
-          for (var g in decoded) {
-            final title = g['title'] ?? '';
-            final items = (g['items'] as List?)?.join(', ') ?? '';
-            lines.add('$title: $items');
-          }
-          optionsCtrl.text = lines.join('\n');
-        }
-      } catch (_) {}
-    }
 
     int selectedCatId = editProduct != null ? editProduct['category_id'] : _categories.first['id'];
     bool isUploadingImage = false;
@@ -341,24 +632,6 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  // Seçenekler / Opsiyonlar Alanı
-                  TextField(
-                    controller: optionsCtrl,
-                    maxLines: 3,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: const InputDecoration(
-                      labelText: 'Ürün Seçenekleri (Her satıra bir grup)',
-                      hintText: 'Şeker: Sade, Az Şekerli, Orta, Şekerli\nSos: Ketçap, Mayonez, İstemiyorum',
-                      hintStyle: TextStyle(color: Colors.white24, fontSize: 11),
-                      labelStyle: TextStyle(color: AppColors.textMuted),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Örnek: "Şeker: Sade, Orta, Şekerli" veya "Sos: Ketçap, Mayonez, Yok"',
-                    style: TextStyle(fontSize: 11, color: AppColors.textMuted, fontStyle: FontStyle.italic),
-                  ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: descCtrl,
@@ -379,27 +652,6 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                     'Content-Type': 'application/json'
                   };
 
-                  // Seçenekler metnini JSON formatına dönüştür
-                  List<Map<String, dynamic>> parsedOptions = [];
-                  final rawLines = optionsCtrl.text.trim().split('\n');
-                  for (var line in rawLines) {
-                    final trimmed = line.trim();
-                    if (trimmed.isEmpty) continue;
-                    if (trimmed.contains(':')) {
-                      final parts = trimmed.split(':');
-                      final title = parts[0].trim();
-                      final items = parts[1].split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-                      if (title.isNotEmpty && items.isNotEmpty) {
-                        parsedOptions.add({'title': title, 'items': items});
-                      }
-                    } else {
-                      final items = trimmed.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-                      if (items.isNotEmpty) {
-                        parsedOptions.add({'title': 'Seçenek', 'items': items});
-                      }
-                    }
-                  }
-
                   if (isEditing) {
                     await http.put(
                       Uri.parse(ApiConfig.shopProducts),
@@ -410,7 +662,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         'name': nameCtrl.text.trim(),
                         'price': double.tryParse(priceCtrl.text) ?? 0.0,
                         'image_url': imgCtrl.text.trim(),
-                        'options_json': parsedOptions.isNotEmpty ? parsedOptions : null,
+                        'options_json': editProduct['options_json'],
                         'description': descCtrl.text.trim(),
                         'is_available': editProduct['is_available'] ?? 1,
                       }),
@@ -424,7 +676,6 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         'name': nameCtrl.text.trim(),
                         'price': double.tryParse(priceCtrl.text) ?? 0.0,
                         'image_url': imgCtrl.text.trim(),
-                        'options_json': parsedOptions.isNotEmpty ? parsedOptions : null,
                         'description': descCtrl.text.trim(),
                       }),
                     );
@@ -609,6 +860,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Siparişler'),
           BottomNavigationBarItem(icon: Icon(Icons.fastfood), label: 'Ürünler'),
+          BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Seçenekler'),
           BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Kategoriler'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Müşteriler'),
         ],
@@ -628,13 +880,21 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     }
     if (_currentTab == 2) {
       return FloatingActionButton.extended(
+        onPressed: () => _openAddOptionToProductDialog(),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Seçenek Ekle', style: TextStyle(color: Colors.white)),
+      );
+    }
+    if (_currentTab == 3) {
+      return FloatingActionButton.extended(
         onPressed: () => _openAddCategoryDialog(),
         backgroundColor: AppColors.accent,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Kategori Ekle', style: TextStyle(color: Colors.white)),
       );
     }
-    if (_currentTab == 3) {
+    if (_currentTab == 4) {
       return FloatingActionButton.extended(
         onPressed: _openAddCustomerDialog,
         backgroundColor: AppColors.primary,
@@ -648,7 +908,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
   Widget _buildCurrentTab() {
     if (_currentTab == 0) return _buildOrdersTab();
     if (_currentTab == 1) return _buildProductsTab();
-    if (_currentTab == 2) return _buildCategoriesTab();
+    if (_currentTab == 2) return _buildOptionsTab();
+    if (_currentTab == 3) return _buildCategoriesTab();
     return _buildCustomersTab();
   }
 
@@ -786,6 +1047,112 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
                   onPressed: () => _deleteProduct(p['id'], p['name']),
                 ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOptionsTab() {
+    if (_products.isEmpty) {
+      return const Center(
+        child: Text('Henüz ürün bulunmuyor. Önce Ürünler sekmesinden ürün ekleyin.', style: TextStyle(color: AppColors.textMuted)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _products.length,
+      itemBuilder: (ctx, i) {
+        final p = _products[i];
+        List<dynamic> groups = [];
+        if (p['options_json'] != null) {
+          try {
+            final decoded = jsonDecode(p['options_json']);
+            if (decoded is List) groups = decoded;
+          } catch (_) {}
+        }
+
+        return Card(
+          color: AppColors.cardBg,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        p['name'],
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => _openAddOptionToProductDialog(preselectedProduct: p),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                      label: const Text('Seçenek Ekle / Düzenle', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (groups.isEmpty) ...[
+                  const Text(
+                    'Tanımlı seçenek bulunmuyor (Şeker, Sos vb. eklemek için butona dokunun).',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ] else ...[
+                  ...groups.map((g) {
+                    final title = g['title'] ?? 'Seçenek';
+                    final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
+
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '$title:',
+                              style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: items.map((it) => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background.withOpacity(0.6),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.white12),
+                                ),
+                                child: Text(it, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                              )).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
               ],
             ),
           ),
