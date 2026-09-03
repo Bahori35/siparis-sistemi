@@ -374,7 +374,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_shopInfo?['name'] ?? auth.shopName ?? 'Hızlı ve Micro Ödeme', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(_shopInfo?['name'] ?? auth.shopName ?? 'Hızlı ve Micro Sipariş', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             Text('${auth.user?['full_name']} (Müşteri)', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
           ],
         ),

@@ -33,18 +33,39 @@ jobs:
         run: |
           mkdir -p /tmp/mobile_src
           cp -r mobile/lib /tmp/mobile_src/
+          cp -r mobile/assets /tmp/mobile_src/ 2>/dev/null || true
           rm -rf mobile
           flutter create --org com.ibrahimabi.orderapp --project-name order_app mobile
           cd mobile
           flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2
+          flutter pub add --dev flutter_launcher_icons:^0.13.1
           cp -r /tmp/mobile_src/lib/* lib/
+          mkdir -p assets
+          cp -r /tmp/mobile_src/assets/* assets/ 2>/dev/null || true
           rm -f test/widget_test.dart
+
+          # Declare assets and flutter_launcher_icons in pubspec.yaml
+          cat << 'EOF' >> pubspec.yaml
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
+  min_sdk_android: 21
+
+flutter:
+  assets:
+    - assets/logo.png
+EOF
+
+          # Generate App Icons
+          dart run flutter_launcher_icons
 
           # Add Permissions, HTTP cleartext traffic & App Label to AndroidManifest.xml
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           sed -i 's/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">\n    <uses-permission android:name="android.permission.INTERNET"\/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"\/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"\/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>/' $MANIFEST
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $MANIFEST
-          sed -i 's/android:label="order_app"/android:label="Hızlı ve Micro Ödeme"/' $MANIFEST
+          sed -i 's/android:label="order_app"/android:label="Hızlı ve Micro Sipariş"/' $MANIFEST
 
 
       - name: Build Android APK
@@ -79,16 +100,36 @@ jobs:
         run: |
           mkdir -p /tmp/mobile_src
           cp -r mobile/lib /tmp/mobile_src/
+          cp -r mobile/assets /tmp/mobile_src/ 2>/dev/null || true
           rm -rf mobile
           flutter create --platforms=ios --org com.ibrahimabi.orderapp --project-name order_app mobile
           cd mobile
           flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2
+          flutter pub add --dev flutter_launcher_icons:^0.13.1
           cp -r /tmp/mobile_src/lib/* lib/
+          mkdir -p assets
+          cp -r /tmp/mobile_src/assets/* assets/ 2>/dev/null || true
           rm -f test/widget_test.dart
+
+          # Declare assets and flutter_launcher_icons in pubspec.yaml
+          cat << 'EOF' >> pubspec.yaml
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
+
+flutter:
+  assets:
+    - assets/logo.png
+EOF
+
+          # Generate App Icons
+          dart run flutter_launcher_icons
 
           # Add iOS photo library permission description to Info.plist
           PLIST="ios/Runner/Info.plist"
-          sed -i '' 's/<dict>/<dict>\n\t<key>NSPhotoLibraryUsageDescription<\/key>\n\t<string>Ürün fotoğrafı seçebilmeniz için galeri izni gereklidir.<\/string>\n\t<key>NSCameraUsageDescription<\/key>\n\t<string>Ürün fotoğrafı çekebilmeniz için kamera izni gereklidir.<\/string>/' $PLIST
+          sed -i '' 's/<dict>/<dict>\n\t<key>CFBundleDisplayName<\/key>\n\t<string>Hızlı ve Micro Sipariş<\/string>\n\t<key>NSPhotoLibraryUsageDescription<\/key>\n\t<string>Ürün fotoğrafı seçebilmeniz için galeri izni gereklidir.<\/string>\n\t<key>NSCameraUsageDescription<\/key>\n\t<string>Ürün fotoğrafı çekebilmeniz için kamera izni gereklidir.<\/string>/' $PLIST
 
       - name: Build iOS
         working-directory: mobile

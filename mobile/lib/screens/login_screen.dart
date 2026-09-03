@@ -71,19 +71,38 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   // Logo / İkon
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 90,
+                    height: 90,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.accent],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.storefront_rounded, size: 44, color: Colors.white),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [AppColors.primary, AppColors.accent],
+                            ),
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: const Icon(Icons.storefront_rounded, size: 48, color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   const Text(
-                    'Hızlı ve Micro Ödeme',
+                    'Hızlı ve Micro Sipariş',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -95,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Dükkan ve Müşteri Giriş Paneli',
                     style: TextStyle(fontSize: 14, color: AppColors.textMuted),
                   ),
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 32),
 
                   // Kullanıcı Adı
                   TextFormField(
