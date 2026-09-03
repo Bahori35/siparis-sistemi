@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ApiConfig {
-  // Canlı/Lokal sunucu IP adresinizi buraya yazın (Örn: http://192.168.1.100 veya http://10.0.2.2/backend/api)
-  static const String baseUrl = 'http://10.0.2.2/backend/api'; 
+  // XAMPP / Backend API IP Adresi
+  static const String baseUrl = 'http://46.197.188.20/backend/api'; 
 
   // Endpointler
   static const String login = '$baseUrl/auth/login.php';
