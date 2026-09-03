@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Süper Admin Paneli | Sipariş Yönetim Sistemi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <!-- 1. GİRİŞ EKRANI (SUPER_ADMIN) -->
+    <div id="loginSection" class="auth-wrapper">
+        <div class="glass-card login-card">
+            <div class="brand-header">
+                <div class="logo-badge">⚡</div>
+                <h1>Süper Admin Paneli</h1>
+                <p>Multi-Tenant İşletme ve Dükkan Yönetim Merkezi</p>
+            </div>
+            <form id="loginForm" onsubmit="handleSuperAdminLogin(event)">
+                <div class="form-group">
+                    <label for="adminUsername">Kullanıcı Adı</label>
+                    <input type="text" id="adminUsername" placeholder="Örn: admin" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Şifre</label>
+                    <input type="password" id="adminPassword" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="btnLogin" class="btn-primary">
+                    <span>Güvenli Giriş Yap</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </form>
+            <div id="loginError" class="alert-box alert-error" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- 2. ANA YÖNETİM PANELİ -->
+    <div id="dashboardSection" class="dashboard-layout" style="display: none;">
+        <!-- Sol Menü (Sidebar) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="logo-icon">🏢</span>
+                <div>
+                    <h2>Süper Admin</h2>
+                    <span class="badge-role">Sistem Yöneticisi</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#shops" class="nav-item active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span>Dükkanlar / İşletmeler</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="avatar" id="currentAdminNameInitial">A</div>
+                    <div>
+                        <strong id="currentAdminName">Sistem Yöneticisi</strong>
+                        <small id="currentAdminUsername">@admin</small>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="btn-logout" title="Çıkış Yap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Sağ Ana İçerik -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h1>Dükkan Yönetimi</h1>
+                    <p class="subtitle">Kayıtlı işletmeler, dükkan sahipleri ve istatistikler</p>
+                </div>
+                <button onclick="openNewShopModal()" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Yeni Dükkan & Sahip Ekle</span>
+                </button>
+            </header>
+
+            <!-- İstatistik Kartları -->
+            <div class="stats-grid">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-blue">🏪</div>
+                    <div>
+                        <span class="stat-label">Toplam Dükkan</span>
+                        <h3 id="statTotalShops">0</h3>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-green">🍔</div>
+                    <div>
+                        <span class="stat-label">Toplam Ürün Çeşidi</span>
+                        <h3 id="statTotalProducts">0</h3>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-purple">👥</div>
+                    <div>
+                        <span class="stat-label">Kayıtlı Müşteri</span>
+                        <h3 id="statTotalCustomers">0</h3>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-orange">📦</div>
+                    <div>
+                        <span class="stat-label">Toplam Sipariş</span>
+                        <h3 id="statTotalOrders">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dükkanlar Tablosu -->
+            <div class="table-container glass-card">
+                <div class="table-header">
+                    <h3>İşletme Listesi</h3>
+                    <button onclick="loadShops()" class="btn-refresh" title="Yenile">⟳ Yenile</button>
+                </div>
+                <div class="responsive-table">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Dükkan Adı</th>
+                                <th>Dükkan Sahibi</th>
+                                <th>İletişim</th>
+                                <th>İstatistikler</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shopsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Yükleniyor...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- YENİ DÜKKAN EKLEME MODALI -->
+    <div id="newShopModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-box glass-card">
+            <div class="modal-header">
+                <h2>Yeni Dükkan & Sahip Hesabı Tanımla</h2>
+                <button onclick="closeNewShopModal()" class="btn-close">&times;</button>
+            </div>
+            <form id="newShopForm" onsubmit="handleCreateShop(event)">
+                <div class="modal-body">
+                    <h4 class="section-divider">🏪 Dükkan Bilgileri</h4>
+                    <div class="form-group">
+                        <label>Dükkan Adı *</label>
+                        <input type="text" id="shopName" placeholder="Örn: Lezzet Çay & Tost Evi" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dükkan Telefonu</label>
+                            <input type="text" id="shopPhone" placeholder="Örn: 05321112233">
+                        </div>
+                        <div class="form-group">
+                            <label>Adres</label>
+                            <input type="text" id="shopAddress" placeholder="Örn: Kat: 2 No: 14">
+                        </div>
+                    </div>
+
+                    <h4 class="section-divider mt-4">👤 Dükkan Sahibi Giriş Bilgileri</h4>
+                    <div class="form-group">
+                        <label>Dükkan Sahibinin Adı Soyadı *</label>
+                        <input type="text" id="ownerFullName" placeholder="Örn: Ahmet Usta" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Giriş Kullanıcı Adı *</label>
+                            <input type="text" id="ownerUsername" placeholder="Örn: ahmetusta" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Giriş Şifresi *</label>
+                            <input type="password" id="ownerPassword" placeholder="En az 4 karakter" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeNewShopModal()" class="btn-secondary">Vazgeç</button>
+                    <button type="submit" class="btn-primary">Dükkanı ve Hesabı Oluştur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BİLDİRİM TOAST -->
+    <div id="toast" class="toast-notification"></div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

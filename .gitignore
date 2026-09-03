@@ -1,0 +1,17 @@
+# Git ignore rules
+.DS_Store
+Thumbs.db
+*.log
+
+# Mobile / Flutter
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub/
+mobile/build/
+mobile/.idea/
+mobile/*.iml
+
+# Backend
+backend/vendor/
