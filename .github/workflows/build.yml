@@ -29,23 +29,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Recreate Flutter Project Structure
-        working-directory: mobile
+      - name: Recreate Flutter Scaffold
         run: |
-          # Temp backup of lib and pubspec
           mkdir -p /tmp/mobile_src
-          cp -r lib pubspec.yaml /tmp/mobile_src/
-          cd ..
+          cp -r mobile/lib /tmp/mobile_src/
           rm -rf mobile
           flutter create --org com.ibrahimabi.orderapp --project-name order_app mobile
-          cp -r /tmp/mobile_src/lib/* mobile/lib/
-          cp /tmp/mobile_src/pubspec.yaml mobile/pubspec.yaml
+          cd mobile
+          flutter pub add http provider shared_preferences
+          cp -r /tmp/mobile_src/lib/* lib/
 
-      - name: Install Dependencies
-        working-directory: mobile
-        run: flutter pub get
-
-      - name: Build Android APK (Release)
+      - name: Build Android APK
         working-directory: mobile
         run: flutter build apk --release --no-tree-shake-icons
 
@@ -57,7 +51,7 @@ jobs:
           retention-days: 14
 
   # ==========================================
-  # 2. IOS BUILD (Runner.app for Simulator / Test)
+  # 2. IOS BUILD (Runner.app for Simulator / Testing)
   # ==========================================
   build-ios:
     name: Build iOS Application
@@ -73,29 +67,23 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Recreate Flutter Project Structure
-        working-directory: mobile
+      - name: Recreate Flutter Scaffold
         run: |
           mkdir -p /tmp/mobile_src
-          cp -r lib pubspec.yaml /tmp/mobile_src/
-          cd ..
+          cp -r mobile/lib /tmp/mobile_src/
           rm -rf mobile
           flutter create --platforms=ios --org com.ibrahimabi.orderapp --project-name order_app mobile
-          cp -r /tmp/mobile_src/lib/* mobile/lib/
-          cp /tmp/mobile_src/pubspec.yaml mobile/pubspec.yaml
+          cd mobile
+          flutter pub add http provider shared_preferences
+          cp -r /tmp/mobile_src/lib/* lib/
 
-      - name: Install Dependencies
+      - name: Build iOS
         working-directory: mobile
-        run: flutter pub get
+        run: flutter build ios --simulator --debug --no-codesign
 
-      - name: Build iOS for Simulator
-        working-directory: mobile
-        run: flutter build ios --simulator --debug
-
-      - name: Package iOS Build (.zip)
-        working-directory: mobile
+      - name: Package iOS App (.zip)
         run: |
-          cd build/ios/iphonesimulator
+          cd mobile/build/ios/iphonesimulator
           zip -r ../../../App-iOS-Simulator.zip Runner.app
 
       - name: Upload iOS Package
