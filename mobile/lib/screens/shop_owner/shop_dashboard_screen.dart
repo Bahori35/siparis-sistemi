@@ -342,92 +342,131 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                     const SizedBox(height: 12),
                     const Divider(color: Colors.white12),
 
-                    // 3. Yeni Seçenek Grubu & Madde Ekleme Formu (+ Butonlu)
-                    const Text('2. Yeni Seçenek Grubu Ekle:', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: groupTitleCtrl,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Grup Başlığı (Örn: Şeker, Sos, Ekmek, Boyut)',
-                        labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                        filled: true,
-                        fillColor: AppColors.background.withOpacity(0.5),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    // 3. Yeni Seçenek Grubu & Madde Ekleme Formu
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.background.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: itemCtrl,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              labelText: 'Seçenek Maddesi (Örn: Sade, Az Şekerli)',
-                              labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                              filled: true,
-                              fillColor: AppColors.background.withOpacity(0.5),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            onSubmitted: (_) {
-                              final title = groupTitleCtrl.text.trim();
-                              final item = itemCtrl.text.trim();
-                              if (title.isNotEmpty && item.isNotEmpty) {
-                                setModalState(() {
-                                  var existing = currentGroups.firstWhere((g) => g['title'].toString().toLowerCase() == title.toLowerCase(), orElse: () => {});
-                                  if (existing.isNotEmpty) {
-                                    (existing['items'] as List<String>).add(item);
-                                  } else {
-                                    currentGroups.add({
-                                      'title': title,
-                                      'items': <String>[item],
-                                    });
-                                  }
-                                  itemCtrl.clear();
-                                });
-                              }
-                            },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '2. Yeni Seçenek Başlığı Belirleyin:',
+                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.filled(
-                          onPressed: () {
-                            final title = groupTitleCtrl.text.trim();
-                            final item = itemCtrl.text.trim();
-                            if (title.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Lütfen önce Grup Başlığı girin!')),
-                              );
-                              return;
-                            }
-                            if (item.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Lütfen bir seçenek maddesi yazın!')),
-                              );
-                              return;
-                            }
-                            setModalState(() {
-                              var existing = currentGroups.firstWhere(
-                                (g) => g['title'].toString().toLowerCase() == title.toLowerCase(),
-                                orElse: () => {},
-                              );
-                              if (existing.isNotEmpty) {
-                                (existing['items'] as List<String>).add(item);
-                              } else {
-                                currentGroups.add({
-                                  'title': title,
-                                  'items': <String>[item],
-                                });
-                              }
-                              itemCtrl.clear();
-                            });
-                          },
-                          style: IconButton.styleFrom(backgroundColor: AppColors.primary),
-                          icon: const Icon(Icons.add, color: Colors.white),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Örn: "Şeker Durumu", "Sos Tercihi", "Ekmek Seçimi"',
+                            style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: groupTitleCtrl,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            decoration: InputDecoration(
+                              labelText: 'Seçenek Başlığı (Örn: Şeker)',
+                              labelStyle: const TextStyle(color: AppColors.accent, fontSize: 12),
+                              hintText: 'Şeker, Sos vb.',
+                              hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
+                              filled: true,
+                              fillColor: AppColors.cardBg,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Seçenek Maddelerini + ile Ekleyin:',
+                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Örn: "Sade" yazıp + ya basın, "Orta" yazıp + ya basın...',
+                            style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: itemCtrl,
+                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  decoration: InputDecoration(
+                                    labelText: 'Seçenek (Örn: Sade / Orta / Şekerli)',
+                                    labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                    filled: true,
+                                    fillColor: AppColors.cardBg,
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  ),
+                                  onSubmitted: (_) {
+                                    final title = groupTitleCtrl.text.trim();
+                                    final item = itemCtrl.text.trim();
+                                    if (title.isNotEmpty && item.isNotEmpty) {
+                                      setModalState(() {
+                                        var existing = currentGroups.firstWhere((g) => g['title'].toString().toLowerCase() == title.toLowerCase(), orElse: () => {});
+                                        if (existing.isNotEmpty) {
+                                          (existing['items'] as List<String>).add(item);
+                                        } else {
+                                          currentGroups.add({
+                                            'title': title,
+                                            'items': <String>[item],
+                                          });
+                                        }
+                                        itemCtrl.clear();
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  final title = groupTitleCtrl.text.trim();
+                                  final item = itemCtrl.text.trim();
+                                  if (title.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Lütfen önce Seçenek Başlığı girin (Örn: Şeker)!'), backgroundColor: AppColors.warning),
+                                    );
+                                    return;
+                                  }
+                                  if (item.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Lütfen eklenecek seçeneği yazın (Örn: Sade)!'), backgroundColor: AppColors.warning),
+                                    );
+                                    return;
+                                  }
+                                  setModalState(() {
+                                    var existing = currentGroups.firstWhere(
+                                      (g) => g['title'].toString().toLowerCase() == title.toLowerCase(),
+                                      orElse: () => {},
+                                    );
+                                    if (existing.isNotEmpty) {
+                                      (existing['items'] as List<String>).add(item);
+                                    } else {
+                                      currentGroups.add({
+                                        'title': title,
+                                        'items': <String>[item],
+                                      });
+                                    }
+                                    itemCtrl.clear();
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                                label: const Text('Ekle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
