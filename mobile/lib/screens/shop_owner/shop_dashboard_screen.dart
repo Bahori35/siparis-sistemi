@@ -191,6 +191,24 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     final descCtrl = TextEditingController(text: editProduct?['description'] ?? '');
     final priceCtrl = TextEditingController(text: editProduct?['price']?.toString() ?? '');
     final imgCtrl = TextEditingController(text: editProduct?['image_url'] ?? '');
+    final optionsCtrl = TextEditingController();
+
+    // Mevcut options_json'u okunabilir metne dönüştür
+    if (editProduct?['options_json'] != null) {
+      try {
+        final decoded = jsonDecode(editProduct!['options_json']);
+        if (decoded is List) {
+          final lines = <String>[];
+          for (var g in decoded) {
+            final title = g['title'] ?? '';
+            final items = (g['items'] as List?)?.join(', ') ?? '';
+            lines.add('$title: $items');
+          }
+          optionsCtrl.text = lines.join('\n');
+        }
+      } catch (_) {}
+    }
+
     int selectedCatId = editProduct != null ? editProduct['category_id'] : _categories.first['id'];
     bool isUploadingImage = false;
 
@@ -255,6 +273,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<int>(
                     value: selectedCatId,
@@ -322,6 +341,24 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 12),
+                  // Seçenekler / Opsiyonlar Alanı
+                  TextField(
+                    controller: optionsCtrl,
+                    maxLines: 3,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    decoration: const InputDecoration(
+                      labelText: 'Ürün Seçenekleri (Her satıra bir grup)',
+                      hintText: 'Şeker: Sade, Az Şekerli, Orta, Şekerli\nSos: Ketçap, Mayonez, İstemiyorum',
+                      hintStyle: TextStyle(color: Colors.white24, fontSize: 11),
+                      labelStyle: TextStyle(color: AppColors.textMuted),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Örnek: "Şeker: Sade, Orta, Şekerli" veya "Sos: Ketçap, Mayonez, Yok"',
+                    style: TextStyle(fontSize: 11, color: AppColors.textMuted, fontStyle: FontStyle.italic),
+                  ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: descCtrl,
@@ -342,6 +379,27 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                     'Content-Type': 'application/json'
                   };
 
+                  // Seçenekler metnini JSON formatına dönüştür
+                  List<Map<String, dynamic>> parsedOptions = [];
+                  final rawLines = optionsCtrl.text.trim().split('\n');
+                  for (var line in rawLines) {
+                    final trimmed = line.trim();
+                    if (trimmed.isEmpty) continue;
+                    if (trimmed.contains(':')) {
+                      final parts = trimmed.split(':');
+                      final title = parts[0].trim();
+                      final items = parts[1].split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+                      if (title.isNotEmpty && items.isNotEmpty) {
+                        parsedOptions.add({'title': title, 'items': items});
+                      }
+                    } else {
+                      final items = trimmed.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+                      if (items.isNotEmpty) {
+                        parsedOptions.add({'title': 'Seçenek', 'items': items});
+                      }
+                    }
+                  }
+
                   if (isEditing) {
                     await http.put(
                       Uri.parse(ApiConfig.shopProducts),
@@ -352,6 +410,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         'name': nameCtrl.text.trim(),
                         'price': double.tryParse(priceCtrl.text) ?? 0.0,
                         'image_url': imgCtrl.text.trim(),
+                        'options_json': parsedOptions.isNotEmpty ? parsedOptions : null,
                         'description': descCtrl.text.trim(),
                         'is_available': editProduct['is_available'] ?? 1,
                       }),
@@ -365,6 +424,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         'name': nameCtrl.text.trim(),
                         'price': double.tryParse(priceCtrl.text) ?? 0.0,
                         'image_url': imgCtrl.text.trim(),
+                        'options_json': parsedOptions.isNotEmpty ? parsedOptions : null,
                         'description': descCtrl.text.trim(),
                       }),
                     );
@@ -623,7 +683,31 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 if (ord['notes'] != null && ord['notes'].toString().isNotEmpty)
                   Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontStyle: FontStyle.italic)),
                 const Divider(color: Colors.white12, height: 20),
-                ...items.map((it) => Text('• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']})', style: const TextStyle(color: Colors.white70))),
+                ...items.map((it) {
+                  final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']})',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        ),
+                        if (hasOpts) ...[
+                          const SizedBox(height: 2),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text(
+                              'Seçenekler: ${it['selected_options']}',
+                              style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }),
                 const SizedBox(height: 8),
                 Text('Toplam: ₺${ord['total_price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
                 const SizedBox(height: 12),

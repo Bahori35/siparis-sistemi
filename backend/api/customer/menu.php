@@ -39,7 +39,7 @@ $catStmt->execute([':shop_id' => $shopId]);
 $categories = $catStmt->fetchAll();
 
 // 3. Dükkana ait sadece aktif ve mevcut ürünleri çek
-$prodStmt = $db->prepare("SELECT id, category_id, name, description, price, image_url, is_available 
+$prodStmt = $db->prepare("SELECT id, category_id, name, description, price, image_url, options_json, is_available 
                           FROM products 
                           WHERE shop_id = :shop_id AND is_available = 1 
                           ORDER BY id DESC");
@@ -51,12 +51,17 @@ $groupedMenu = [];
 $productsByCategory = [];
 foreach ($products as $p) {
     $catId = (int)$p['category_id'];
+    $options = null;
+    if (!empty($p['options_json'])) {
+        $options = json_decode($p['options_json'], true);
+    }
     $productsByCategory[$catId][] = [
         'id'          => (int)$p['id'],
         'name'        => $p['name'],
         'description' => $p['description'],
         'price'       => (float)$p['price'],
         'image_url'   => $p['image_url'] ?? null,
+        'options'     => $options,
         'is_available'=> (bool)$p['is_available']
     ];
 }

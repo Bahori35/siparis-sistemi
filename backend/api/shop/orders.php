@@ -42,7 +42,7 @@ if ($method === 'GET') {
 
     // Sipariş kalemlerini ekle
     foreach ($orders as &$order) {
-        $itemStmt = $db->prepare("SELECT oi.id, oi.product_id, oi.quantity, oi.unit_price, p.name as product_name
+        $itemStmt = $db->prepare("SELECT oi.id, oi.product_id, oi.quantity, oi.unit_price, oi.selected_options, p.name as product_name
                                   FROM order_items oi
                                   LEFT JOIN products p ON oi.product_id = p.id
                                   WHERE oi.order_id = :order_id");

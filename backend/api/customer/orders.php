@@ -34,7 +34,7 @@ if ($method === 'GET') {
     $orders = $stmt->fetchAll();
 
     foreach ($orders as &$order) {
-        $itemStmt = $db->prepare("SELECT oi.id, oi.product_id, oi.quantity, oi.unit_price, p.name as product_name
+        $itemStmt = $db->prepare("SELECT oi.id, oi.product_id, oi.quantity, oi.unit_price, oi.selected_options, p.name as product_name
                                   FROM order_items oi
                                   LEFT JOIN products p ON oi.product_id = p.id
                                   WHERE oi.order_id = :order_id");
@@ -48,7 +48,7 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     // Yeni Sipariş Oluştur
     $body = Request::getJsonBody();
-    $items = $body['items'] ?? []; // [{ product_id: 1, quantity: 2 }, ...]
+    $items = $body['items'] ?? []; // [{ product_id: 1, quantity: 2, selected_options: "..." }, ...]
     $notes = trim($body['notes'] ?? '');
 
     if (!is_array($items) || empty($items)) {
@@ -65,6 +65,7 @@ if ($method === 'POST') {
         foreach ($items as $item) {
             $productId = (int)($item['product_id'] ?? 0);
             $quantity = (int)($item['quantity'] ?? 0);
+            $selectedOptions = isset($item['selected_options']) ? (is_string($item['selected_options']) ? trim($item['selected_options']) : json_encode($item['selected_options'], JSON_UNESCAPED_UNICODE)) : null;
 
             if ($productId <= 0 || $quantity <= 0) {
                 $db->rollBack();
@@ -94,10 +95,11 @@ if ($method === 'POST') {
             $totalPrice += $subTotal;
 
             $orderItemsToInsert[] = [
-                'product_id' => $productId,
-                'quantity'   => $quantity,
-                'unit_price' => $unitPrice,
-                'name'       => $product['name']
+                'product_id'       => $productId,
+                'quantity'         => $quantity,
+                'unit_price'       => $unitPrice,
+                'selected_options' => $selectedOptions,
+                'name'             => $product['name']
             ];
         }
 
@@ -114,14 +116,15 @@ if ($method === 'POST') {
         $orderId = (int)$db->lastInsertId();
 
         // Kalemleri ekle
-        $itemInsertStmt = $db->prepare("INSERT INTO order_items (order_id, product_id, quantity, unit_price)
-                                        VALUES (:order_id, :product_id, :quantity, :unit_price)");
+        $itemInsertStmt = $db->prepare("INSERT INTO order_items (order_id, product_id, quantity, unit_price, selected_options)
+                                        VALUES (:order_id, :product_id, :quantity, :unit_price, :selected_options)");
         foreach ($orderItemsToInsert as $oItem) {
             $itemInsertStmt->execute([
-                ':order_id'   => $orderId,
-                ':product_id' => $oItem['product_id'],
-                ':quantity'   => $oItem['quantity'],
-                ':unit_price' => $oItem['unit_price']
+                ':order_id'         => $orderId,
+                ':product_id'       => $oItem['product_id'],
+                ':quantity'         => $oItem['quantity'],
+                ':unit_price'       => $oItem['unit_price'],
+                ':selected_options' => $oItem['selected_options']
             ]);
         }
 

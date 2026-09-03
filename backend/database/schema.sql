@@ -80,6 +80,7 @@ CREATE TABLE products (
     description TEXT NULL COMMENT 'Ürün Açıklaması / İçindekiler',
     price DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT 'Birim Fiyatı (TL)',
     image_url VARCHAR(255) NULL COMMENT 'Ürün Görsel URL veya Yolu',
+    options_json TEXT NULL COMMENT 'Ürün Seçenek Grupları JSON (Şeker, Sos, Boyut vb.)',
     is_available TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1: Menüde Var/Sipariş Edilebilir, 0: Tükendi/Yok',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -130,6 +131,7 @@ CREATE TABLE order_items (
     product_id INT UNSIGNED NOT NULL,
     quantity INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Adet',
     unit_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT 'Sipariş anındaki ürün birim fiyatı',
+    selected_options TEXT NULL COMMENT 'Her adet için seçilen opsiyonlar (JSON / Metin)',
     
     CONSTRAINT fk_order_items_order_id 
         FOREIGN KEY (order_id) REFERENCES orders(id) 

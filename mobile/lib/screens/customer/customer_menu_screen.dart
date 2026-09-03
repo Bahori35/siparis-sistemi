@@ -21,8 +21,8 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   List<dynamic> _myOrders = [];
   bool _isLoading = false;
 
-  // Sepet: { productId: { 'product': item, 'quantity': count } }
-  final Map<int, Map<String, dynamic>> _cart = {};
+  // Sepet: Liste halinde tutuyoruz. Her eleman: { 'product': item, 'quantity': 1, 'selected_options': 'Sade, Orta vb.' }
+  final List<Map<String, dynamic>> _cartList = [];
   final TextEditingController _orderNotesController = TextEditingController();
 
   @override
@@ -75,47 +75,256 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     }
   }
 
-  void _addToCart(dynamic product) {
-    final id = product['id'] as int;
-    setState(() {
-      if (_cart.containsKey(id)) {
-        _cart[id]!['quantity'] += 1;
-      } else {
-        _cart[id] = {'product': product, 'quantity': 1};
+  // =========================================================================
+  // SEÇENEK VE ADET BELİRLEME PENCERESİ (3 Kahve için 1., 2., 3. Ayrı Seçim)
+  // =========================================================================
+  void _openAddToCartDialog(dynamic product) {
+    int quantity = 1;
+    final optionsData = product['options'] as List<dynamic>? ?? [];
+
+    // optionsData: [ { title: 'Şeker', items: ['Sade', 'Orta', 'Şekerli'] }, ... ]
+    // Her adet indexi (0, 1, 2) için seçilen opsiyonlar: { 0: { 'Şeker': 'Orta' }, 1: { 'Şeker': 'Sade' } }
+    final Map<int, Map<String, String>> unitSelections = {
+      0: {}
+    };
+
+    // İlk adet için varsayılan ilk elemanları seç
+    for (var g in optionsData) {
+      final title = g['title'] ?? 'Seçenek';
+      final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      if (items.isNotEmpty) {
+        unitSelections[0]![title] = items.first;
       }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${product['name']} sepete eklendi.'), duration: const Duration(seconds: 1)),
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Başlık & Kapat
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product['name'],
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppColors.textMuted),
+                        onPressed: () => Navigator.pop(ctx),
+                      )
+                    ],
+                  ),
+                  Text('₺${product['price']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.success)),
+                  const SizedBox(height: 16),
+
+                  // ADET SEÇİMİ
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.background.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Adet Belirleyin:', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline, color: AppColors.danger, size: 28),
+                              onPressed: () {
+                                if (quantity > 1) {
+                                  setSheetState(() {
+                                    unitSelections.remove(quantity - 1);
+                                    quantity--;
+                                  });
+                                }
+                              },
+                            ),
+                            Text('$quantity', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline, color: AppColors.success, size: 28),
+                              onPressed: () {
+                                if (quantity < 20) {
+                                  setSheetState(() {
+                                    final newIndex = quantity;
+                                    unitSelections[newIndex] = {};
+                                    for (var g in optionsData) {
+                                      final title = g['title'] ?? 'Seçenek';
+                                      final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
+                                      if (items.isNotEmpty) {
+                                        unitSelections[newIndex]![title] = items.first;
+                                      }
+                                    }
+                                    quantity++;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // SEÇENEKLER (1. ÜRÜN, 2. ÜRÜN, 3. ÜRÜN AYRI AYRI)
+                  if (optionsData.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    const Text('Seçenekleri Belirleyin:', style: TextStyle(color: AppColors.accent, fontSize: 15, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+
+                    ...List.generate(quantity, (index) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.background.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              quantity > 1 ? '${index + 1}. ${product['name']} Seçenekleri:' : 'Seçimleriniz:',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            const SizedBox(height: 8),
+                            ...optionsData.map((g) {
+                              final groupTitle = g['title'] ?? 'Seçenek';
+                              final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
+                              final currentSelected = unitSelections[index]?[groupTitle] ?? (items.isNotEmpty ? items.first : '');
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('$groupTitle:', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                    const SizedBox(height: 4),
+                                    Wrap(
+                                      spacing: 6,
+                                      children: items.map((optItem) {
+                                        final isSel = currentSelected == optItem;
+                                        return ChoiceChip(
+                                          label: Text(optItem, style: TextStyle(fontSize: 12, color: isSel ? Colors.white : AppColors.textMuted)),
+                                          selected: isSel,
+                                          selectedColor: AppColors.primary,
+                                          backgroundColor: AppColors.cardBg,
+                                          onSelected: (selected) {
+                                            if (selected) {
+                                              setSheetState(() {
+                                                unitSelections[index]![groupTitle] = optItem;
+                                              });
+                                            }
+                                          },
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // SEPETE EKLE ONAY BUTONU
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () {
+                        // Her adet için oluşturulan opsiyon metinlerini sepet listesine ekle
+                        setState(() {
+                          for (int i = 0; i < quantity; i++) {
+                            final optsMap = unitSelections[i] ?? {};
+                            final optsStr = optsMap.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+
+                            _cartList.add({
+                              'product': product,
+                              'quantity': 1,
+                              'selected_options': optsStr.isNotEmpty ? optsStr : null,
+                            });
+                          }
+                        });
+
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('$quantity adet ${product['name']} sepete eklendi.'),
+                            backgroundColor: AppColors.success,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.shopping_cart_checkout, color: Colors.white),
+                      label: Text(
+                        'Sepete Ekle (₺${((product['price'] as num) * quantity).toStringAsFixed(2)})',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  void _removeFromCart(int productId) {
+  void _removeFromCart(int index) {
     setState(() {
-      if (_cart.containsKey(productId)) {
-        if (_cart[productId]!['quantity'] > 1) {
-          _cart[productId]!['quantity'] -= 1;
-        } else {
-          _cart.remove(productId);
-        }
-      }
+      _cartList.removeAt(index);
     });
   }
 
   double get _cartTotal {
     double total = 0;
-    _cart.forEach((_, item) {
-      total += (item['product']['price'] as num) * item['quantity'];
-    });
+    for (var item in _cartList) {
+      total += (item['product']['price'] as num) * (item['quantity'] as int);
+    }
     return total;
   }
 
   Future<void> _submitOrder() async {
-    if (_cart.isEmpty) return;
+    if (_cartList.isEmpty) return;
 
     final auth = Provider.of<AuthService>(context, listen: false);
-    final itemsPayload = _cart.entries.map((e) => {
-      'product_id': e.key,
-      'quantity': e.value['quantity'],
+    final itemsPayload = _cartList.map((e) => {
+      'product_id': e['product']['id'],
+      'quantity': e['quantity'],
+      'selected_options': e['selected_options'],
     }).toList();
 
     try {
@@ -134,7 +343,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       final data = jsonDecode(res.body);
       if (res.statusCode == 201 && data['success'] == true) {
         setState(() {
-          _cart.clear();
+          _cartList.clear();
           _orderNotesController.clear();
           _currentTab = 2; // Siparişler sekmesine geç
         });
@@ -165,7 +374,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_shopInfo?['name'] ?? auth.shopName ?? 'Menü', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(_shopInfo?['name'] ?? auth.shopName ?? 'Hızlı ve Micro Ödeme', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             Text('${auth.user?['full_name']} (Müşteri)', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
           ],
         ),
@@ -200,8 +409,8 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
           const BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Menü'),
           BottomNavigationBarItem(
             icon: Badge(
-              isLabelVisible: _cart.isNotEmpty,
-              label: Text('${_cart.values.fold(0, (sum, i) => sum + (i['quantity'] as int))}'),
+              isLabelVisible: _cartList.isNotEmpty,
+              label: Text('${_cartList.length}'),
               child: const Icon(Icons.shopping_cart),
             ),
             label: 'Sepetim',
@@ -219,7 +428,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   }
 
   // ==========================================
-  // AKORDİYON / ALT ALTA AÇILIR KAPANIR MENÜ
+  // AKORDİYON / DİKEY MENÜ
   // ==========================================
   Widget _buildMenuTab() {
     if (_menu.isEmpty) {
@@ -250,7 +459,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
-              initiallyExpanded: i == 0, // İlk kategori varsayılan açık gelir
+              initiallyExpanded: i == 0,
               iconColor: AppColors.primary,
               collapsedIconColor: AppColors.textMuted,
               tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -279,10 +488,10 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
               ),
-              // Tıklandığında Kategori Altında Açılan Ürünler
               children: products.map((p) {
                 final hasImage = p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty;
                 final hasDesc = p['description'] != null && p['description'].toString().trim().isNotEmpty;
+                final hasOptions = p['options'] != null && (p['options'] as List).isNotEmpty;
 
                 return Container(
                   margin: const EdgeInsets.only(top: 12),
@@ -313,7 +522,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         ),
                       ],
 
-                      // 2. Büyük Ürün Görseli (İsmin Altında, Geniş ve Net)
+                      // 2. Büyük Ürün Görseli (İsmin Altında)
                       if (hasImage) ...[
                         const SizedBox(height: 12),
                         ClipRRect(
@@ -343,7 +552,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                             ),
                           ),
                           ElevatedButton.icon(
-                            onPressed: () => _addToCart(p),
+                            onPressed: () => _openAddToCartDialog(p),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -351,8 +560,8 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 2,
                             ),
-                            icon: const Icon(Icons.add_shopping_cart, size: 18),
-                            label: const Text('Sepete Ekle', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                            icon: Icon(hasOptions ? Icons.tune : Icons.add_shopping_cart, size: 18),
+                            label: Text(hasOptions ? 'Seç ve Ekle' : 'Sepete Ekle', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -368,7 +577,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   }
 
   Widget _buildCartTab() {
-    if (_cart.isEmpty) {
+    if (_cartList.isEmpty) {
       return const Center(
         child: Text('Sepetiniz boş. Menüden dilediğiniz ürünleri ekleyin!', style: TextStyle(color: AppColors.textMuted)),
       );
@@ -378,22 +587,32 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ..._cart.values.map((item) {
+          ..._cartList.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final item = entry.value;
             final p = item['product'];
-            final qty = item['quantity'];
+            final opts = item['selected_options'];
+
             return Card(
               color: AppColors.cardBg,
               margin: const EdgeInsets.only(bottom: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               child: ListTile(
                 title: Text(p['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                subtitle: Text('₺${p['price']} x $qty = ₺${(p['price'] * qty).toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted)),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(icon: const Icon(Icons.remove, color: AppColors.danger), onPressed: () => _removeFromCart(p['id'])),
-                    Text('$qty', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    IconButton(icon: const Icon(Icons.add, color: AppColors.success), onPressed: () => _addToCart(p)),
+                    if (opts != null && opts.toString().isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text('Seçenek: $opts', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                    const SizedBox(height: 2),
+                    Text('Birim Tutar: ₺${p['price']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
                   ],
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                  onPressed: () => _removeFromCart(idx),
                 ),
               ),
             );
@@ -403,7 +622,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             controller: _orderNotesController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Sipariş Notu (Örn: Çay açık olsun, Kat 3 Muhasebe)',
+              labelText: 'Sipariş Notu (Örn: Kat 3 Muhasebe)',
               labelStyle: const TextStyle(color: AppColors.textMuted),
               filled: true,
               fillColor: AppColors.cardBg,
@@ -417,7 +636,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Toplam Tutar:', style: TextStyle(fontSize: 16, color: AppColors.textMuted)),
+                Text('Toplam (${_cartList.length} Ürün):', style: const TextStyle(fontSize: 16, color: AppColors.textMuted)),
                 Text('₺${_cartTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.success)),
               ],
             ),
@@ -467,7 +686,24 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 const SizedBox(height: 6),
                 Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 const Divider(color: Colors.white12, height: 16),
-                ...items.map((it) => Text('• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']})', style: const TextStyle(color: Colors.white70))),
+                ...items.map((it) {
+                  final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']})', style: const TextStyle(color: Colors.white70)),
+                        if (hasOpts) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text('Seçenek: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }),
                 const SizedBox(height: 8),
                 Text('Toplam Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
               ],
