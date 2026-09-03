@@ -189,6 +189,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     final nameCtrl = TextEditingController(text: editProduct?['name'] ?? '');
     final descCtrl = TextEditingController(text: editProduct?['description'] ?? '');
     final priceCtrl = TextEditingController(text: editProduct?['price']?.toString() ?? '');
+    final imgCtrl = TextEditingController(text: editProduct?['image_url'] ?? '');
     int selectedCatId = editProduct != null ? editProduct['category_id'] : _categories.first['id'];
 
     showDialog(
@@ -215,13 +216,23 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 TextField(
                   controller: nameCtrl,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Ürün Adı', labelStyle: TextStyle(color: AppColors.textMuted)),
+                  decoration: const InputDecoration(labelText: 'Ürün Adı *', labelStyle: TextStyle(color: AppColors.textMuted)),
                 ),
                 TextField(
                   controller: priceCtrl,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Fiyat (TL)', labelStyle: TextStyle(color: AppColors.textMuted)),
+                  decoration: const InputDecoration(labelText: 'Fiyat (TL) *', labelStyle: TextStyle(color: AppColors.textMuted)),
+                ),
+                TextField(
+                  controller: imgCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Görsel URL / Link (Opsiyonel)',
+                    hintText: 'https://ornek.com/resim.jpg',
+                    hintStyle: TextStyle(color: Colors.white24, fontSize: 12),
+                    labelStyle: TextStyle(color: AppColors.textMuted),
+                  ),
                 ),
                 TextField(
                   controller: descCtrl,
@@ -251,6 +262,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                       'category_id': selectedCatId,
                       'name': nameCtrl.text.trim(),
                       'price': double.tryParse(priceCtrl.text) ?? 0.0,
+                      'image_url': imgCtrl.text.trim(),
                       'description': descCtrl.text.trim(),
                       'is_available': editProduct['is_available'] ?? 1,
                     }),
@@ -263,6 +275,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                       'category_id': selectedCatId,
                       'name': nameCtrl.text.trim(),
                       'price': double.tryParse(priceCtrl.text) ?? 0.0,
+                      'image_url': imgCtrl.text.trim(),
                       'description': descCtrl.text.trim(),
                     }),
                   );
@@ -558,6 +571,31 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           color: AppColors.cardBg,
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
+            leading: p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      p['image_url'],
+                      width: 45,
+                      height: 45,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 45,
+                        height: 45,
+                        color: AppColors.primary.withOpacity(0.2),
+                        child: const Icon(Icons.fastfood, color: AppColors.primary, size: 22),
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 45,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.fastfood, color: AppColors.primary, size: 22),
+                  ),
             title: Text(p['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             subtitle: Text('${p['category_name'] ?? '-'} • ₺${p['price']}', style: const TextStyle(color: AppColors.textMuted)),
             trailing: Row(

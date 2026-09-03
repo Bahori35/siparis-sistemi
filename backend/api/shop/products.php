@@ -21,7 +21,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     // Dükkana ait tüm ürünleri kategorileriyle birlikte listele
     $stmt = $db->prepare("SELECT p.id, p.shop_id, p.category_id, p.name, p.description, 
-                                 p.price, p.is_available, p.created_at,
+                                 p.price, p.image_url, p.is_available, p.created_at,
                                  c.name as category_name
                           FROM products p
                           LEFT JOIN categories c ON p.category_id = c.id
@@ -39,6 +39,7 @@ if ($method === 'POST') {
     $name = trim($body['name'] ?? '');
     $description = trim($body['description'] ?? '');
     $price = (float)($body['price'] ?? 0);
+    $imageUrl = trim($body['image_url'] ?? '');
     $isAvailable = isset($body['is_available']) ? (int)$body['is_available'] : 1;
 
     if ($categoryId <= 0 || empty($name) || $price < 0) {
@@ -52,14 +53,15 @@ if ($method === 'POST') {
         Response::error('Seçilen kategori bu dükkana ait değil.', 403);
     }
 
-    $stmt = $db->prepare("INSERT INTO products (shop_id, category_id, name, description, price, is_available)
-                          VALUES (:shop_id, :category_id, :name, :description, :price, :is_available)");
+    $stmt = $db->prepare("INSERT INTO products (shop_id, category_id, name, description, price, image_url, is_available)
+                          VALUES (:shop_id, :category_id, :name, :description, :price, :image_url, :is_available)");
     $stmt->execute([
         ':shop_id'     => $shopId,
         ':category_id' => $categoryId,
         ':name'        => $name,
         ':description' => $description ?: null,
         ':price'       => $price,
+        ':image_url'   => $imageUrl ?: null,
         ':is_available'=> $isAvailable
     ]);
 
@@ -70,6 +72,7 @@ if ($method === 'POST') {
         'category_id' => $categoryId,
         'name'        => $name,
         'price'       => $price,
+        'image_url'   => $imageUrl ?: null,
         'is_available'=> $isAvailable
     ], 'Ürün başarıyla eklendi.', 201);
 }
@@ -81,6 +84,7 @@ if ($method === 'PUT') {
     $name = trim($body['name'] ?? '');
     $description = trim($body['description'] ?? '');
     $price = isset($body['price']) ? (float)$body['price'] : null;
+    $imageUrl = isset($body['image_url']) ? trim($body['image_url']) : null;
     $isAvailable = isset($body['is_available']) ? (int)$body['is_available'] : null;
 
     if ($id <= 0 || empty($name) || $price === null || $price < 0) {
@@ -99,6 +103,7 @@ if ($method === 'PUT') {
                               name = :name,
                               description = :description,
                               price = :price,
+                              image_url = :image_url,
                               is_available = :is_available
                           WHERE id = :id AND shop_id = :shop_id");
     $stmt->execute([
@@ -106,8 +111,11 @@ if ($method === 'PUT') {
         ':name'        => $name,
         ':description' => $description ?: null,
         ':price'       => $price,
+        ':image_url'   => $imageUrl ?: null,
         ':is_available'=> $isAvailable,
         ':id'          => $id,
+        ':shop_id'     => $shopId
+    ]);
         ':shop_id'     => $shopId
     ]);
 

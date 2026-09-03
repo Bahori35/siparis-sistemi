@@ -291,6 +291,24 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   ),
                   child: Row(
                     children: [
+                      if (p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            p['image_url'],
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 60,
+                              height: 60,
+                              color: AppColors.cardBg,
+                              child: const Icon(Icons.fastfood, color: AppColors.primary, size: 24),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

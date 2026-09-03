@@ -79,6 +79,7 @@ CREATE TABLE products (
     name VARCHAR(150) NOT NULL COMMENT 'Ürün Adı',
     description TEXT NULL COMMENT 'Ürün Açıklaması / İçindekiler',
     price DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT 'Birim Fiyatı (TL)',
+    image_url VARCHAR(255) NULL COMMENT 'Ürün Görsel URL veya Yolu',
     is_available TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1: Menüde Var/Sipariş Edilebilir, 0: Tükendi/Yok',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

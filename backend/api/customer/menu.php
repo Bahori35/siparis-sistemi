@@ -39,7 +39,7 @@ $catStmt->execute([':shop_id' => $shopId]);
 $categories = $catStmt->fetchAll();
 
 // 3. Dükkana ait sadece aktif ve mevcut ürünleri çek
-$prodStmt = $db->prepare("SELECT id, category_id, name, description, price, is_available 
+$prodStmt = $db->prepare("SELECT id, category_id, name, description, price, image_url, is_available 
                           FROM products 
                           WHERE shop_id = :shop_id AND is_available = 1 
                           ORDER BY id DESC");
@@ -56,6 +56,7 @@ foreach ($products as $p) {
         'name'        => $p['name'],
         'description' => $p['description'],
         'price'       => (float)$p['price'],
+        'image_url'   => $p['image_url'] ?? null,
         'is_available'=> (bool)$p['is_available']
     ];
 }
