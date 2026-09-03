@@ -14,7 +14,7 @@ class ShopDashboardScreen extends StatefulWidget {
 }
 
 class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
-  int _currentTab = 0; // 0: Siparişler, 1: Ürünler & Kategoriler, 2: Müşteriler
+  int _currentTab = 0; // 0: Siparişler, 1: Ürünler, 2: Kategoriler, 3: Müşteriler
   List<dynamic> _orders = [];
   List<dynamic> _products = [];
   List<dynamic> _categories = [];
@@ -49,6 +49,269 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       debugPrint('Veri çekme hatası: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ==========================================
+  // KATEGORİ YÖNETİMİ (EKLE, DÜZENLE, SİL)
+  // ==========================================
+  void _openAddCategoryDialog({Map<String, dynamic>? editCategory}) {
+    final nameCtrl = TextEditingController(text: editCategory?['name'] ?? '');
+    final sortCtrl = TextEditingController(text: editCategory?['sort_order']?.toString() ?? '0');
+    final isEditing = editCategory != null;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: Text(isEditing ? 'Kategori Düzenle' : 'Yeni Kategori Ekle', style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Kategori Adı (Örn: Çorbalar, Tatlılar)',
+                labelStyle: TextStyle(color: AppColors.textMuted),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: sortCtrl,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Sıralama Sırası (0, 1, 2...)',
+                labelStyle: TextStyle(color: AppColors.textMuted),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            onPressed: () async {
+              final name = nameCtrl.text.trim();
+              if (name.isEmpty) return;
+
+              final auth = Provider.of<AuthService>(context, listen: false);
+              final headers = {
+                'Authorization': 'Bearer ${auth.token}',
+                'Content-Type': 'application/json'
+              };
+
+              if (isEditing) {
+                // Güncelleme
+                await http.put(
+                  Uri.parse(ApiConfig.shopCategories),
+                  headers: headers,
+                  body: jsonEncode({
+                    'id': editCategory['id'],
+                    'name': name,
+                    'sort_order': int.tryParse(sortCtrl.text) ?? 0,
+                  }),
+                );
+              } else {
+                // Yeni Ekleme
+                await http.post(
+                  Uri.parse(ApiConfig.shopCategories),
+                  headers: headers,
+                  body: jsonEncode({
+                    'name': name,
+                    'sort_order': int.tryParse(sortCtrl.text) ?? 0,
+                  }),
+                );
+              }
+
+              if (!context.mounted) return;
+              Navigator.pop(ctx);
+              _loadAllData();
+            },
+            child: Text(isEditing ? 'Güncelle' : 'Kaydet'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteCategory(int categoryId, String categoryName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: const Text('Kategoriyi Sil', style: TextStyle(color: Colors.white)),
+        content: Text(
+          '"$categoryName" kategorisini ve bu kategoriye bağlı tüm ürünleri silmek istediğinize emin misiniz?',
+          style: const TextStyle(color: AppColors.textMuted),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Evet, Sil'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      try {
+        await http.delete(
+          Uri.parse('${ApiConfig.shopCategories}?id=$categoryId'),
+          headers: {
+            'Authorization': 'Bearer ${auth.token}',
+            'Content-Type': 'application/json'
+          },
+        );
+        _loadAllData();
+      } catch (e) {
+        debugPrint('Kategori silme hatası: $e');
+      }
+    }
+  }
+
+  // ==========================================
+  // ÜRÜN YÖNETİMİ (EKLE, DÜZENLE, SİL)
+  // ==========================================
+  void _openAddProductDialog({Map<String, dynamic>? editProduct}) {
+    if (_categories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lütfen önce en az 1 kategori ekleyin!')),
+      );
+      return;
+    }
+
+    final isEditing = editProduct != null;
+    final nameCtrl = TextEditingController(text: editProduct?['name'] ?? '');
+    final descCtrl = TextEditingController(text: editProduct?['description'] ?? '');
+    final priceCtrl = TextEditingController(text: editProduct?['price']?.toString() ?? '');
+    int selectedCatId = editProduct != null ? editProduct['category_id'] : _categories.first['id'];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          title: Text(isEditing ? 'Ürün Düzenle' : 'Yeni Ürün Ekle', style: const TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<int>(
+                  value: selectedCatId,
+                  dropdownColor: AppColors.cardBg,
+                  style: const TextStyle(color: Colors.white),
+                  items: _categories.map<DropdownMenuItem<int>>((c) => DropdownMenuItem(
+                    value: c['id'] as int,
+                    child: Text(c['name']),
+                  )).toList(),
+                  onChanged: (val) => setDialogState(() => selectedCatId = val!),
+                  decoration: const InputDecoration(labelText: 'Kategori', labelStyle: TextStyle(color: AppColors.textMuted)),
+                ),
+                TextField(
+                  controller: nameCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Ürün Adı', labelStyle: TextStyle(color: AppColors.textMuted)),
+                ),
+                TextField(
+                  controller: priceCtrl,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Fiyat (TL)', labelStyle: TextStyle(color: AppColors.textMuted)),
+                ),
+                TextField(
+                  controller: descCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Açıklama (Opsiyonel)', labelStyle: TextStyle(color: AppColors.textMuted)),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              onPressed: () async {
+                final auth = Provider.of<AuthService>(context, listen: false);
+                final headers = {
+                  'Authorization': 'Bearer ${auth.token}',
+                  'Content-Type': 'application/json'
+                };
+
+                if (isEditing) {
+                  await http.put(
+                    Uri.parse(ApiConfig.shopProducts),
+                    headers: headers,
+                    body: jsonEncode({
+                      'id': editProduct['id'],
+                      'category_id': selectedCatId,
+                      'name': nameCtrl.text.trim(),
+                      'price': double.tryParse(priceCtrl.text) ?? 0.0,
+                      'description': descCtrl.text.trim(),
+                      'is_available': editProduct['is_available'] ?? 1,
+                    }),
+                  );
+                } else {
+                  await http.post(
+                    Uri.parse(ApiConfig.shopProducts),
+                    headers: headers,
+                    body: jsonEncode({
+                      'category_id': selectedCatId,
+                      'name': nameCtrl.text.trim(),
+                      'price': double.tryParse(priceCtrl.text) ?? 0.0,
+                      'description': descCtrl.text.trim(),
+                    }),
+                  );
+                }
+
+                if (!context.mounted) return;
+                Navigator.pop(ctx);
+                _loadAllData();
+              },
+              child: Text(isEditing ? 'Güncelle' : 'Ürünü Ekle'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _deleteProduct(int productId, String productName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: const Text('Ürünü Sil', style: TextStyle(color: Colors.white)),
+        content: Text('"$productName" ürününü silmek istediğinize emin misiniz?', style: const TextStyle(color: AppColors.textMuted)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Evet, Sil'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      try {
+        await http.delete(
+          Uri.parse('${ApiConfig.shopProducts}?id=$productId'),
+          headers: {
+            'Authorization': 'Bearer ${auth.token}',
+            'Content-Type': 'application/json'
+          },
+        );
+        _loadAllData();
+      } catch (e) {
+        debugPrint('Ürün silme hatası: $e');
+      }
     }
   }
 
@@ -116,7 +379,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
               final auth = Provider.of<AuthService>(context, listen: false);
-              final res = await http.post(
+              await http.post(
                 Uri.parse(ApiConfig.shopCustomers),
                 headers: {
                   'Authorization': 'Bearer ${auth.token}',
@@ -129,95 +392,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   'password': passCtrl.text.trim(),
                 }),
               );
+              if (!context.mounted) return;
               Navigator.pop(ctx);
               _loadAllData();
             },
             child: const Text('Müşteriyi Kaydet'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _openAddProductDialog() {
-    if (_categories.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen önce en az 1 kategori ekleyin!')),
-      );
-      return;
-    }
-
-    final nameCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final priceCtrl = TextEditingController();
-    int selectedCatId = _categories.first['id'];
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          title: const Text('Yeni Ürün Ekle', style: TextStyle(color: Colors.white)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<int>(
-                  value: selectedCatId,
-                  dropdownColor: AppColors.cardBg,
-                  style: const TextStyle(color: Colors.white),
-                  items: _categories.map<DropdownMenuItem<int>>((c) => DropdownMenuItem(
-                    value: c['id'] as int,
-                    child: Text(c['name']),
-                  )).toList(),
-                  onChanged: (val) => setDialogState(() => selectedCatId = val!),
-                  decoration: const InputDecoration(labelText: 'Kategori', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-                TextField(
-                  controller: nameCtrl,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Ürün Adı', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-                TextField(
-                  controller: priceCtrl,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Fiyat (TL)', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-                TextField(
-                  controller: descCtrl,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Açıklama (Opsiyonel)', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              onPressed: () async {
-                final auth = Provider.of<AuthService>(context, listen: false);
-                await http.post(
-                  Uri.parse(ApiConfig.shopProducts),
-                  headers: {
-                    'Authorization': 'Bearer ${auth.token}',
-                    'Content-Type': 'application/json'
-                  },
-                  body: jsonEncode({
-                    'category_id': selectedCatId,
-                    'name': nameCtrl.text.trim(),
-                    'price': double.tryParse(priceCtrl.text) ?? 0.0,
-                    'description': descCtrl.text.trim(),
-                  }),
-                );
-                Navigator.pop(ctx);
-                _loadAllData();
-              },
-              child: const Text('Ürünü Ekle'),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -246,6 +427,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             icon: const Icon(Icons.logout, color: AppColors.danger),
             onPressed: () async {
               await auth.logout();
+              if (!context.mounted) return;
               Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
             },
           )
@@ -259,34 +441,51 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         backgroundColor: AppColors.cardBg,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) => setState(() => _currentTab = index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Siparişler'),
-          BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Menü & Ürünler'),
+          BottomNavigationBarItem(icon: Icon(Icons.fastfood), label: 'Ürünler'),
+          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Kategoriler'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Müşteriler'),
         ],
       ),
-      floatingActionButton: _currentTab == 1
-          ? FloatingActionButton.extended(
-              onPressed: _openAddProductDialog,
-              backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('Ürün Ekle', style: TextStyle(color: Colors.white)),
-            )
-          : _currentTab == 2
-              ? FloatingActionButton.extended(
-                  onPressed: _openAddCustomerDialog,
-                  backgroundColor: AppColors.primary,
-                  icon: const Icon(Icons.person_add, color: Colors.white),
-                  label: const Text('Müşteri Ekle', style: TextStyle(color: Colors.white)),
-                )
-              : null,
+      floatingActionButton: _getFab(),
     );
+  }
+
+  Widget? _getFab() {
+    if (_currentTab == 1) {
+      return FloatingActionButton.extended(
+        onPressed: () => _openAddProductDialog(),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Ürün Ekle', style: TextStyle(color: Colors.white)),
+      );
+    }
+    if (_currentTab == 2) {
+      return FloatingActionButton.extended(
+        onPressed: () => _openAddCategoryDialog(),
+        backgroundColor: AppColors.accent,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Kategori Ekle', style: TextStyle(color: Colors.white)),
+      );
+    }
+    if (_currentTab == 3) {
+      return FloatingActionButton.extended(
+        onPressed: _openAddCustomerDialog,
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.person_add, color: Colors.white),
+        label: const Text('Müşteri Ekle', style: TextStyle(color: Colors.white)),
+      );
+    }
+    return null;
   }
 
   Widget _buildCurrentTab() {
     if (_currentTab == 0) return _buildOrdersTab();
     if (_currentTab == 1) return _buildProductsTab();
+    if (_currentTab == 2) return _buildCategoriesTab();
     return _buildCustomersTab();
   }
 
@@ -361,9 +560,56 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           child: ListTile(
             title: Text(p['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             subtitle: Text('${p['category_name'] ?? '-'} • ₺${p['price']}', style: const TextStyle(color: AppColors.textMuted)),
-            trailing: Chip(
-              backgroundColor: p['is_available'] == 1 ? AppColors.success.withOpacity(0.2) : AppColors.danger.withOpacity(0.2),
-              label: Text(p['is_available'] == 1 ? 'Mevcut' : 'Tükendi', style: TextStyle(color: p['is_available'] == 1 ? AppColors.success : AppColors.danger)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.primary, size: 20),
+                  onPressed: () => _openAddProductDialog(editProduct: p),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
+                  onPressed: () => _deleteProduct(p['id'], p['name']),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoriesTab() {
+    if (_categories.isEmpty) {
+      return const Center(child: Text('Henüz kategori bulunmuyor. Kategori Ekle butonuyla ekleyebilirsiniz.', style: TextStyle(color: AppColors.textMuted)));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _categories.length,
+      itemBuilder: (ctx, i) {
+        final cat = _categories[i];
+        return Card(
+          color: AppColors.cardBg,
+          margin: const EdgeInsets.only(bottom: 10),
+          child: ListTile(
+            leading: const CircleAvatar(
+              backgroundColor: AppColors.accent,
+              child: Icon(Icons.category, color: Colors.white, size: 20),
+            ),
+            title: Text(cat['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            subtitle: Text('Sıra: ${cat['sort_order'] ?? 0}', style: const TextStyle(color: AppColors.textMuted)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.primary, size: 20),
+                  onPressed: () => _openAddCategoryDialog(editCategory: cat),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
+                  onPressed: () => _deleteCategory(cat['id'], cat['name']),
+                ),
+              ],
             ),
           ),
         );
