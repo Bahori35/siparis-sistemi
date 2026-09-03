@@ -116,8 +116,6 @@ if ($method === 'PUT') {
         ':id'          => $id,
         ':shop_id'     => $shopId
     ]);
-        ':shop_id'     => $shopId
-    ]);
 
     Response::success(null, 'Ürün başarıyla güncellendi.');
 }

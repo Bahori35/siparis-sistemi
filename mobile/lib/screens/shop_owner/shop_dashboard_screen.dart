@@ -663,28 +663,31 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           child: ListTile(
             leading: p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     child: Image.network(
                       p['image_url'],
-                      width: 45,
-                      height: 45,
+                      width: 65,
+                      height: 65,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
-                        width: 45,
-                        height: 45,
-                        color: AppColors.primary.withOpacity(0.2),
-                        child: const Icon(Icons.fastfood, color: AppColors.primary, size: 22),
+                        width: 65,
+                        height: 65,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.fastfood, color: AppColors.primary, size: 28),
                       ),
                     ),
                   )
                 : Container(
-                    width: 45,
-                    height: 45,
+                    width: 65,
+                    height: 65,
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.fastfood, color: AppColors.primary, size: 22),
+                    child: const Icon(Icons.fastfood, color: AppColors.primary, size: 28),
                   ),
             title: Text(p['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             subtitle: Text('${p['category_name'] ?? '-'} • ₺${p['price']}', style: const TextStyle(color: AppColors.textMuted)),

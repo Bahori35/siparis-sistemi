@@ -290,24 +290,28 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     border: Border.all(color: Colors.white.withOpacity(0.05)),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty) ...[
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(14),
                           child: Image.network(
                             p['image_url'],
-                            width: 60,
-                            height: 60,
+                            width: 85,
+                            height: 85,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              width: 60,
-                              height: 60,
-                              color: AppColors.cardBg,
-                              child: const Icon(Icons.fastfood, color: AppColors.primary, size: 24),
+                              width: 85,
+                              height: 85,
+                              decoration: BoxDecoration(
+                                color: AppColors.cardBg,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(Icons.fastfood, color: AppColors.primary, size: 32),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                       ],
                       Expanded(
                         child: Column(
@@ -318,21 +322,23 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                                fontSize: 16,
                               ),
                             ),
                             if (p['description'] != null && p['description'].toString().isNotEmpty) ...[
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 4),
                               Text(
                                 p['description'],
                                 style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             Text(
                               '₺${p['price']}',
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.success,
                               ),
