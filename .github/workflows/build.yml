@@ -46,14 +46,15 @@ jobs:
 
           echo 'assets:' >> pubspec.yaml
           echo '  - assets/logo.png' >> pubspec.yaml
+          echo '  - assets/app_icon_padded.png' >> pubspec.yaml
 
           echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
           echo '  android: "launcher_icon"' >> flutter_launcher_icons.yaml
           echo '  ios: true' >> flutter_launcher_icons.yaml
-          echo '  image_path: "assets/logo.png"' >> flutter_launcher_icons.yaml
+          echo '  image_path: "assets/app_icon_padded.png"' >> flutter_launcher_icons.yaml
           echo '  min_sdk_android: 21' >> flutter_launcher_icons.yaml
-          echo '  adaptive_icon_background: "assets/logo.png"' >> flutter_launcher_icons.yaml
-          echo '  adaptive_icon_foreground: "assets/logo.png"' >> flutter_launcher_icons.yaml
+          echo '  adaptive_icon_background: "#0F172A"' >> flutter_launcher_icons.yaml
+          echo '  adaptive_icon_foreground: "assets/app_icon_padded.png"' >> flutter_launcher_icons.yaml
 
           dart run flutter_launcher_icons
 
@@ -108,11 +109,12 @@ jobs:
 
           echo 'assets:' >> pubspec.yaml
           echo '  - assets/logo.png' >> pubspec.yaml
+          echo '  - assets/app_icon_padded.png' >> pubspec.yaml
 
           echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
           echo '  android: false' >> flutter_launcher_icons.yaml
           echo '  ios: true' >> flutter_launcher_icons.yaml
-          echo '  image_path: "assets/logo.png"' >> flutter_launcher_icons.yaml
+          echo '  image_path: "assets/app_icon_padded.png"' >> flutter_launcher_icons.yaml
           echo '  remove_alpha_ios: true' >> flutter_launcher_icons.yaml
 
           dart run flutter_launcher_icons
