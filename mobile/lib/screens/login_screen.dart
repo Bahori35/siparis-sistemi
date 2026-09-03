@@ -71,36 +71,40 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   // Logo / İkon
                   Container(
-                    width: 90,
-                    height: 90,
+                    width: 120,
+                    height: 120,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
+                      shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
+                          color: AppColors.primary.withOpacity(0.25),
+                          blurRadius: 24,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
+                    child: ClipOval(
                       child: Image.asset(
                         'assets/logo.png',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppColors.primary, AppColors.accent],
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Image.asset(
+                          'assets/app_icon_padded.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => Container(
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [AppColors.primary, AppColors.accent],
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(22),
+                            child: const Icon(Icons.storefront_rounded, size: 54, color: Colors.white),
                           ),
-                          child: const Icon(Icons.storefront_rounded, size: 48, color: Colors.white),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   const Text(
                     'Hızlı ve Micro Sipariş',
                     style: TextStyle(
