@@ -312,7 +312,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(12)),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.between,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Toplam Tutar:', style: TextStyle(fontSize: 16, color: AppColors.textMuted)),
                 Text('₺${_cartTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.success)),
@@ -355,7 +355,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.between,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                     _buildStatusChip(ord['status']),
