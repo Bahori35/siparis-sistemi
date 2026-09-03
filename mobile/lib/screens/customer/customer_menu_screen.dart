@@ -281,82 +281,80 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               ),
               // Tıklandığında Kategori Altında Açılan Ürünler
               children: products.map((p) {
+                final hasImage = p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty;
+                final hasDesc = p['description'] != null && p['description'].toString().trim().isNotEmpty;
+
                 return Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    color: AppColors.background.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.08)),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty) ...[
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: Image.network(
-                            p['image_url'],
-                            width: 85,
-                            height: 85,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 85,
-                              height: 85,
-                              decoration: BoxDecoration(
-                                color: AppColors.cardBg,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(Icons.fastfood, color: AppColors.primary, size: 32),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                      ],
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              p['name'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            if (p['description'] != null && p['description'].toString().isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                p['description'],
-                                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                            const SizedBox(height: 8),
-                            Text(
-                              '₺${p['price']}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.success,
-                              ),
-                            ),
-                          ],
+                      // 1. Ürün Adı (En Üstte)
+                      Text(
+                        p['name'],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          letterSpacing: 0.2,
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () => _addToCart(p),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          elevation: 0,
+                      if (hasDesc) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          p['description'],
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.3),
                         ),
-                        icon: const Icon(Icons.add_shopping_cart, size: 16),
-                        label: const Text('Ekle', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      ],
+
+                      // 2. Büyük Ürün Görseli (İsmin Altında, Geniş ve Net)
+                      if (hasImage) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            p['image_url'],
+                            height: 160,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 12),
+
+                      // 3. Alt Kısım: Fiyat ve Sepete Ekle Butonu
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '₺${p['price']}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.success,
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () => _addToCart(p),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 2,
+                            ),
+                            icon: const Icon(Icons.add_shopping_cart, size: 18),
+                            label: const Text('Sepete Ekle', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
                     ],
                   ),
