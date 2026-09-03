@@ -40,10 +40,11 @@ jobs:
           cp -r /tmp/mobile_src/lib/* lib/
           rm -f test/widget_test.dart
 
-          # Add INTERNET permission & HTTP cleartext traffic to AndroidManifest.xml
+          # Add INTERNET permission & HTTP cleartext traffic & App Label to AndroidManifest.xml
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           sed -i 's/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">\n    <uses-permission android:name="android.permission.INTERNET"\/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"\/>/' $MANIFEST
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $MANIFEST
+          sed -i 's/android:label="order_app"/android:label="Hızlı ve Micro Ödeme"/' $MANIFEST
 
 
       - name: Build Android APK

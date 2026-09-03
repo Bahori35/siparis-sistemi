@@ -83,16 +83,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Sipariş Sistemi',
+                    'Hızlı ve Micro Ödeme',
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textMain,
                     ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Dükkan ve Müşteri Ortak Giriş Ekranı',
+                    'Dükkan ve Müşteri Giriş Paneli',
                     style: TextStyle(fontSize: 14, color: AppColors.textMuted),
                   ),
                   const SizedBox(height: 36),
