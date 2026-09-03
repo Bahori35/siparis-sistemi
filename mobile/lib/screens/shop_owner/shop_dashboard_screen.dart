@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import '../../services/auth_service.dart';
 import '../../constants.dart';
 import '../login_screen.dart';
@@ -191,104 +192,193 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     final priceCtrl = TextEditingController(text: editProduct?['price']?.toString() ?? '');
     final imgCtrl = TextEditingController(text: editProduct?['image_url'] ?? '');
     int selectedCatId = editProduct != null ? editProduct['category_id'] : _categories.first['id'];
+    bool isUploadingImage = false;
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          title: Text(isEditing ? 'Ürün Düzenle' : 'Yeni Ürün Ekle', style: const TextStyle(color: Colors.white)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<int>(
-                  value: selectedCatId,
-                  dropdownColor: AppColors.cardBg,
-                  style: const TextStyle(color: Colors.white),
-                  items: _categories.map<DropdownMenuItem<int>>((c) => DropdownMenuItem(
-                    value: c['id'] as int,
-                    child: Text(c['name']),
-                  )).toList(),
-                  onChanged: (val) => setDialogState(() => selectedCatId = val!),
-                  decoration: const InputDecoration(labelText: 'Kategori', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-                TextField(
-                  controller: nameCtrl,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Ürün Adı *', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-                TextField(
-                  controller: priceCtrl,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Fiyat (TL) *', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-                TextField(
-                  controller: imgCtrl,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Görsel URL / Link (Opsiyonel)',
-                    hintText: 'https://ornek.com/resim.jpg',
-                    hintStyle: TextStyle(color: Colors.white24, fontSize: 12),
-                    labelStyle: TextStyle(color: AppColors.textMuted),
-                  ),
-                ),
-                TextField(
-                  controller: descCtrl,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Açıklama (Opsiyonel)', labelStyle: TextStyle(color: AppColors.textMuted)),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              onPressed: () async {
-                final auth = Provider.of<AuthService>(context, listen: false);
-                final headers = {
+        builder: (ctx, setDialogState) {
+          Future<void> pickAndUploadImage() async {
+            try {
+              final picker = ImagePicker();
+              final pickedFile = await picker.pickImage(
+                source: ImageSource.gallery,
+                maxWidth: 1024,
+                maxHeight: 1024,
+                imageQuality: 85,
+              );
+
+              if (pickedFile == null) return;
+
+              setDialogState(() => isUploadingImage = true);
+
+              final auth = Provider.of<AuthService>(context, listen: false);
+              final bytes = await pickedFile.readAsBytes();
+              final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+
+              final res = await http.post(
+                Uri.parse(ApiConfig.shopUpload),
+                headers: {
                   'Authorization': 'Bearer ${auth.token}',
                   'Content-Type': 'application/json'
-                };
+                },
+                body: jsonEncode({'image_base64': base64Image}),
+              );
 
-                if (isEditing) {
-                  await http.put(
-                    Uri.parse(ApiConfig.shopProducts),
-                    headers: headers,
-                    body: jsonEncode({
-                      'id': editProduct['id'],
-                      'category_id': selectedCatId,
-                      'name': nameCtrl.text.trim(),
-                      'price': double.tryParse(priceCtrl.text) ?? 0.0,
-                      'image_url': imgCtrl.text.trim(),
-                      'description': descCtrl.text.trim(),
-                      'is_available': editProduct['is_available'] ?? 1,
-                    }),
-                  );
-                } else {
-                  await http.post(
-                    Uri.parse(ApiConfig.shopProducts),
-                    headers: headers,
-                    body: jsonEncode({
-                      'category_id': selectedCatId,
-                      'name': nameCtrl.text.trim(),
-                      'price': double.tryParse(priceCtrl.text) ?? 0.0,
-                      'image_url': imgCtrl.text.trim(),
-                      'description': descCtrl.text.trim(),
-                    }),
-                  );
-                }
+              final data = jsonDecode(res.body);
+              if (res.statusCode == 200 && data['success'] == true) {
+                final uploadedUrl = data['data']['image_url'];
+                setDialogState(() {
+                  imgCtrl.text = uploadedUrl;
+                  isUploadingImage = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Fotoğraf başarıyla yüklendi!'), backgroundColor: AppColors.success),
+                );
+              } else {
+                setDialogState(() => isUploadingImage = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(data['message'] ?? 'Fotoğraf yüklenemedi.'), backgroundColor: AppColors.danger),
+                );
+              }
+            } catch (e) {
+              setDialogState(() => isUploadingImage = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Fotoğraf seçme hatası: $e'), backgroundColor: AppColors.danger),
+              );
+            }
+          }
 
-                if (!context.mounted) return;
-                Navigator.pop(ctx);
-                _loadAllData();
-              },
-              child: Text(isEditing ? 'Güncelle' : 'Ürünü Ekle'),
+          return AlertDialog(
+            backgroundColor: AppColors.cardBg,
+            title: Text(isEditing ? 'Ürün Düzenle' : 'Yeni Ürün Ekle', style: const TextStyle(color: Colors.white)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<int>(
+                    value: selectedCatId,
+                    dropdownColor: AppColors.cardBg,
+                    style: const TextStyle(color: Colors.white),
+                    items: _categories.map<DropdownMenuItem<int>>((c) => DropdownMenuItem(
+                      value: c['id'] as int,
+                      child: Text(c['name']),
+                    )).toList(),
+                    onChanged: (val) => setDialogState(() => selectedCatId = val!),
+                    decoration: const InputDecoration(labelText: 'Kategori', labelStyle: TextStyle(color: AppColors.textMuted)),
+                  ),
+                  TextField(
+                    controller: nameCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Ürün Adı *', labelStyle: TextStyle(color: AppColors.textMuted)),
+                  ),
+                  TextField(
+                    controller: priceCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Fiyat (TL) *', labelStyle: TextStyle(color: AppColors.textMuted)),
+                  ),
+                  const SizedBox(height: 12),
+                  // Galeri Yükleme Butonu & Link Kutusu
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: imgCtrl,
+                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          decoration: const InputDecoration(
+                            labelText: 'Görsel Linki / URL',
+                            hintText: 'https://...',
+                            hintStyle: TextStyle(color: Colors.white24, fontSize: 11),
+                            labelStyle: TextStyle(color: AppColors.textMuted),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: isUploadingImage ? null : pickAndUploadImage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: isUploadingImage
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.photo_library, size: 18),
+                        label: Text(isUploadingImage ? '...' : 'Galeri', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  if (imgCtrl.text.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        imgCtrl.text,
+                        height: 90,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: descCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Açıklama (Opsiyonel)', labelStyle: TextStyle(color: AppColors.textMuted)),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () async {
+                  final auth = Provider.of<AuthService>(context, listen: false);
+                  final headers = {
+                    'Authorization': 'Bearer ${auth.token}',
+                    'Content-Type': 'application/json'
+                  };
+
+                  if (isEditing) {
+                    await http.put(
+                      Uri.parse(ApiConfig.shopProducts),
+                      headers: headers,
+                      body: jsonEncode({
+                        'id': editProduct['id'],
+                        'category_id': selectedCatId,
+                        'name': nameCtrl.text.trim(),
+                        'price': double.tryParse(priceCtrl.text) ?? 0.0,
+                        'image_url': imgCtrl.text.trim(),
+                        'description': descCtrl.text.trim(),
+                        'is_available': editProduct['is_available'] ?? 1,
+                      }),
+                    );
+                  } else {
+                    await http.post(
+                      Uri.parse(ApiConfig.shopProducts),
+                      headers: headers,
+                      body: jsonEncode({
+                        'category_id': selectedCatId,
+                        'name': nameCtrl.text.trim(),
+                        'price': double.tryParse(priceCtrl.text) ?? 0.0,
+                        'image_url': imgCtrl.text.trim(),
+                        'description': descCtrl.text.trim(),
+                      }),
+                    );
+                  }
+
+                  if (!context.mounted) return;
+                  Navigator.pop(ctx);
+                  _loadAllData();
+                },
+                child: Text(isEditing ? 'Güncelle' : 'Ürünü Ekle'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

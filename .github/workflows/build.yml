@@ -36,7 +36,7 @@ jobs:
           rm -rf mobile
           flutter create --org com.ibrahimabi.orderapp --project-name order_app mobile
           cd mobile
-          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3
+          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2
           cp -r /tmp/mobile_src/lib/* lib/
           rm -f test/widget_test.dart
 
@@ -81,7 +81,7 @@ jobs:
           rm -rf mobile
           flutter create --platforms=ios --org com.ibrahimabi.orderapp --project-name order_app mobile
           cd mobile
-          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3
+          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2
           cp -r /tmp/mobile_src/lib/* lib/
           rm -f test/widget_test.dart
 

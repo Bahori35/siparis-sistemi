@@ -12,6 +12,7 @@ class ApiConfig {
   static const String shopCategories = '$baseUrl/shop/categories.php';
   static const String shopProducts = '$baseUrl/shop/products.php';
   static const String shopOrders = '$baseUrl/shop/orders.php';
+  static const String shopUpload = '$baseUrl/shop/upload.php';
   
   // Müşteri
   static const String customerMenu = '$baseUrl/customer/menu.php';
