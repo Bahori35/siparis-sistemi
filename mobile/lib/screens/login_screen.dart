@@ -69,42 +69,19 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo / İkon
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.25),
-                          blurRadius: 24,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/logo.png',
+                  // Logo
+                  SizedBox(
+                    height: 110,
+                    child: Image.asset(
+                      'assets/logo.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Image.asset(
+                        'assets/app_icon_padded.png',
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Image.asset(
-                          'assets/app_icon_padded.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Container(
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [AppColors.primary, AppColors.accent],
-                              ),
-                            ),
-                            child: const Icon(Icons.storefront_rounded, size: 54, color: Colors.white),
-                          ),
-                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
                   const Text(
                     'Hızlı ve Micro Sipariş',
                     style: TextStyle(
