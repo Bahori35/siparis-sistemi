@@ -83,18 +83,15 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     final optionsData = product['options'] as List<dynamic>? ?? [];
 
     // optionsData: [ { title: 'Şeker', items: ['Sade', 'Orta', 'Şekerli'] }, ... ]
-    // Her adet indexi (0, 1, 2) için seçilen opsiyonlar: { 0: { 'Şeker': 'Orta' }, 1: { 'Şeker': 'Sade' } }
-    final Map<int, Map<String, String>> unitSelections = {
+    // Her adet indexi (0, 1, 2) için seçilen opsiyonlar: { 0: { 'İçindekiler': ['Domates', 'Kaşar'] } }
+    final Map<int, Map<String, List<String>>> unitSelections = {
       0: {}
     };
 
-    // İlk adet için varsayılan ilk elemanları seç
+    // Başlangıçta hiçbir seçenek varsayılan olarak seçili gelmesin (boş başlasın)
     for (var g in optionsData) {
       final title = g['title'] ?? 'Seçenek';
-      final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
-      if (items.isNotEmpty) {
-        unitSelections[0]![title] = items.first;
-      }
+      unitSelections[0]![title] = [];
     }
 
     showModalBottomSheet(
@@ -172,10 +169,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     unitSelections[newIndex] = {};
                                     for (var g in optionsData) {
                                       final title = g['title'] ?? 'Seçenek';
-                                      final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
-                                      if (items.isNotEmpty) {
-                                        unitSelections[newIndex]![title] = items.first;
-                                      }
+                                      unitSelections[newIndex]![title] = [];
                                     }
                                     quantity++;
                                   });
@@ -191,7 +185,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   // SEÇENEKLER (1. ÜRÜN, 2. ÜRÜN, 3. ÜRÜN AYRI AYRI)
                   if (optionsData.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    const Text('Seçenekleri Belirleyin:', style: TextStyle(color: AppColors.accent, fontSize: 15, fontWeight: FontWeight.bold)),
+                    const Text('Seçenekleri Belirleyin (İstediğiniz kadar seçebilirsiniz):', style: TextStyle(color: AppColors.accent, fontSize: 15, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
 
                     ...List.generate(quantity, (index) {
@@ -214,7 +208,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                             ...optionsData.map((g) {
                               final groupTitle = g['title'] ?? 'Seçenek';
                               final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
-                              final currentSelected = unitSelections[index]?[groupTitle] ?? (items.isNotEmpty ? items.first : '');
+                              final selectedList = unitSelections[index]?[groupTitle] ?? [];
 
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 6),
@@ -226,18 +220,26 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     Wrap(
                                       spacing: 6,
                                       children: items.map((optItem) {
-                                        final isSel = currentSelected == optItem;
-                                        return ChoiceChip(
+                                        final isSel = selectedList.contains(optItem);
+                                        return FilterChip(
                                           label: Text(optItem, style: TextStyle(fontSize: 12, color: isSel ? Colors.white : AppColors.textMuted)),
                                           selected: isSel,
+                                          checkmarkColor: Colors.white,
                                           selectedColor: AppColors.primary,
                                           backgroundColor: AppColors.cardBg,
                                           onSelected: (selected) {
-                                            if (selected) {
-                                              setSheetState(() {
-                                                unitSelections[index]![groupTitle] = optItem;
-                                              });
-                                            }
+                                            setSheetState(() {
+                                              if (unitSelections[index]![groupTitle] == null) {
+                                                unitSelections[index]![groupTitle] = [];
+                                              }
+                                              if (selected) {
+                                                if (!unitSelections[index]![groupTitle]!.contains(optItem)) {
+                                                  unitSelections[index]![groupTitle]!.add(optItem);
+                                                }
+                                              } else {
+                                                unitSelections[index]![groupTitle]!.remove(optItem);
+                                              }
+                                            });
                                           },
                                         );
                                       }).toList(),
@@ -268,7 +270,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         setState(() {
                           for (int i = 0; i < quantity; i++) {
                             final optsMap = unitSelections[i] ?? {};
-                            final optsStr = optsMap.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+                            final List<String> formattedOpts = [];
+                            optsMap.forEach((title, items) {
+                              if (items.isNotEmpty) {
+                                formattedOpts.add('$title: ${items.join(", ")}');
+                              }
+                            });
+                            final optsStr = formattedOpts.join(' | ');
 
                             _cartList.add({
                               'product': product,
