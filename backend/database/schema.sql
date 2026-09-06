@@ -128,7 +128,7 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT UNSIGNED NOT NULL,
-    product_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NULL COMMENT 'Ürün silinirse NULL olur, geçmiş sipariş kaydı korunur',
     quantity INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Adet',
     unit_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT 'Sipariş anındaki ürün birim fiyatı',
     selected_options TEXT NULL COMMENT 'Her adet için seçilen opsiyonlar (JSON / Metin)',
@@ -139,7 +139,7 @@ CREATE TABLE order_items (
         
     CONSTRAINT fk_order_items_product_id 
         FOREIGN KEY (product_id) REFERENCES products(id) 
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+        ON DELETE SET NULL ON UPDATE CASCADE,
         
     INDEX idx_order_items_order (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
