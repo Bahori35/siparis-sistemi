@@ -9,7 +9,7 @@ INSERT INTO users (shop_id, username, password_hash, role, full_name, phone, is_
 VALUES (
     NULL,
     'admin',
-    '$2y$10$wN7N70j0cugKxsqgXpP8zef/2VjGZ1vPqm2FmgJ8B.w75r8b8O.eG', -- 123456
+    '$2y$10$EYPowhEp1hgxng4cHh/nwOYRrzW9oBo29a0/piRHGbJt7P2ZglSya', -- 123456
     'SUPER_ADMIN',
     'Sistem Yöneticisi',
     '05550000000',
@@ -25,7 +25,7 @@ INSERT INTO users (shop_id, username, password_hash, role, full_name, phone, is_
 VALUES (
     1,
     'ibrahim',
-    '$2y$10$wN7N70j0cugKxsqgXpP8zef/2VjGZ1vPqm2FmgJ8B.w75r8b8O.eG', -- 123456
+    '$2y$10$EYPowhEp1hgxng4cHh/nwOYRrzW9oBo29a0/piRHGbJt7P2ZglSya', -- 123456
     'SHOP_OWNER',
     'İbrahim Usta',
     '05321112233',
@@ -37,7 +37,7 @@ INSERT INTO users (shop_id, username, password_hash, role, full_name, phone, is_
 VALUES (
     1,
     'ahmet',
-    '$2y$10$wN7N70j0cugKxsqgXpP8zef/2VjGZ1vPqm2FmgJ8B.w75r8b8O.eG', -- 123456
+    '$2y$10$EYPowhEp1hgxng4cHh/nwOYRrzW9oBo29a0/piRHGbJt7P2ZglSya', -- 123456
     'CUSTOMER',
     'Ahmet Yılmaz (Ofis Kat 3)',
     '05443332211',
