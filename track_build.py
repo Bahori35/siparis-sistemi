@@ -4,7 +4,7 @@ import time
 import os
 import zipfile
 
-TOKEN = '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'
+TOKEN = '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'
 REPO = 'Bahori35/siparis-sistemi'
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
@@ -45,26 +45,29 @@ def download_artifact(run_id):
 def main():
     print("Checking workflow runs...")
     while True:
-        run = get_latest_run()
-        if not run:
-            print("No run found.")
-            time.sleep(5)
-            continue
-        
-        status = run['status']
-        conclusion = run['conclusion']
-        run_id = run['id']
-        commit_msg = run.get('head_commit', {}).get('message', '')
-        print(f"Run ID: {run_id} | Status: {status} | Conclusion: {conclusion} | Commit: {commit_msg[:40]}")
-        
-        if status == 'completed':
-            if conclusion == 'success':
-                print("Build successful! Downloading APK...")
-                download_artifact(run_id)
-                break
-            else:
-                print(f"Build failed with conclusion: {conclusion}")
-                break
+        try:
+            run = get_latest_run()
+            if not run:
+                print("No run found.")
+                time.sleep(5)
+                continue
+            
+            status = run['status']
+            conclusion = run['conclusion']
+            run_id = run['id']
+            commit_msg = run.get('head_commit', {}).get('message', '')
+            print(f"Run ID: {run_id} | Status: {status} | Conclusion: {conclusion} | Commit: {commit_msg[:50]}")
+            
+            if status == 'completed':
+                if conclusion == 'success':
+                    print("Build successful! Downloading APK...")
+                    download_artifact(run_id)
+                    break
+                else:
+                    print(f"Build failed with conclusion: {conclusion}")
+                    break
+        except Exception as e:
+            print(f"Error: {e}")
         
         time.sleep(10)
 

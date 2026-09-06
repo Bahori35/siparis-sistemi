@@ -131,17 +131,42 @@ if ($method === 'PUT') {
 if ($method === 'DELETE') {
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) {
+        $body = Request::getJsonBody();
+        $id = (int)($body['id'] ?? 0);
+    }
+
+    if ($id <= 0) {
         Response::error('Geçerli bir Ürün ID belirtilmedi.', 422);
     }
 
-    $stmt = $db->prepare("DELETE FROM products WHERE id = :id AND shop_id = :shop_id");
-    $stmt->execute([':id' => $id, ':shop_id' => $shopId]);
+    try {
+        // Ürünün bu dükkana ait olduğunu kontrol et
+        $check = $db->prepare("SELECT id FROM products WHERE id = :id AND shop_id = :shop_id");
+        $check->execute([':id' => $id, ':shop_id' => $shopId]);
+        if (!$check->fetch()) {
+            Response::notFound('Ürün bulunamadı veya bu dükkana ait değil.');
+        }
 
-    if ($stmt->rowCount() === 0) {
-        Response::notFound('Ürün bulunamadı veya silinemedi.');
+        // Ürünü sil (Eğer geçmiş siparişlerde kullanılmışsa foreign key hatası vermemesi için cascade/temizleme yap)
+        $db->beginTransaction();
+        
+        // Ürüne bağlı geçmiş sipariş kalemlerindeki product_id referansını güncelle veya temizle
+        // Foreign key kısıtlaması nedeniyle silme engellenmesin diye:
+        $delItems = $db->prepare("DELETE FROM order_items WHERE product_id = :id");
+        $delItems->execute([':id' => $id]);
+
+        $stmt = $db->prepare("DELETE FROM products WHERE id = :id AND shop_id = :shop_id");
+        $stmt->execute([':id' => $id, ':shop_id' => $shopId]);
+
+        $db->commit();
+
+        Response::success(null, 'Ürün başarıyla silindi.');
+    } catch (PDOException $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        Response::error('Ürün silinirken bir hata oluştu: ' . $e->getMessage(), 500);
     }
-
-    Response::success(null, 'Ürün silindi.');
 }
 
 Response::error('Desteklenmeyen istek yöntemi.', 405);

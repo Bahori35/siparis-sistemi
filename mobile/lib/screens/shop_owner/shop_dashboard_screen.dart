@@ -754,16 +754,33 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     if (confirmed == true) {
       final auth = Provider.of<AuthService>(context, listen: false);
       try {
-        await http.delete(
+        final res = await http.delete(
           Uri.parse('${ApiConfig.shopProducts}?id=$productId'),
           headers: {
             'Authorization': 'Bearer ${auth.token}',
             'Content-Type': 'application/json'
           },
         );
-        _loadAllData();
+
+        final data = jsonDecode(res.body);
+        if (res.statusCode == 200 && data['success'] == true) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('"$productName" başarıyla silindi.'), backgroundColor: AppColors.success),
+          );
+          _loadAllData();
+        } else {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Ürün silinemedi.'), backgroundColor: AppColors.danger),
+          );
+        }
       } catch (e) {
         debugPrint('Ürün silme hatası: $e');
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: AppColors.danger),
+        );
       }
     }
   }
