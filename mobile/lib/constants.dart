@@ -20,14 +20,15 @@ class ApiConfig {
 }
 
 class AppColors {
-  static const Color primary = Color(0xFF6366F1);
-  static const Color primaryDark = Color(0xFF4F46E5);
-  static const Color accent = Color(0xFFA855F7);
-  static const Color background = Color(0xFF0F172A);
-  static const Color cardBg = Color(0xFF1E293B);
-  static const Color textMain = Color(0xFFF8FAFC);
-  static const Color textMuted = Color(0xFF94A3B8);
-  static const Color success = Color(0xFF10B981);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color danger = Color(0xFFEF4444);
+  // Canlı Turuncu Renk Teması (Warm Orange / Amber)
+  static const Color primary = Color(0xFFFF7A00);      // Ana Turuncu (Butonlar, Vurgular)
+  static const Color primaryDark = Color(0xFFE05600);  // Koyu Turuncu (Hover / Tıklama)
+  static const Color accent = Color(0xFFFF9D42);       // Açık Turuncu Vurgu
+  static const Color background = Color(0xFF121212);   // Koyu Siyah / Arka Plan
+  static const Color cardBg = Color(0xFF1E1E1E);       // Koyu Kart ve Kutu Arka Planı
+  static const Color textMain = Color(0xFFFFFFFF);     // Beyaz Başlık ve Yazılar
+  static const Color textMuted = Color(0xFFA0A0A0);    // Yumuşak Gri Yardımcı Yazılar
+  static const Color success = Color(0xFF10B981);      // Yeşil (Onay)
+  static const Color warning = Color(0xFFF59E0B);      // Sarı / Turuncu
+  static const Color danger = Color(0xFFEF4444);       // Kırmızı (Silme/İptal)
 }
