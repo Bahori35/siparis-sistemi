@@ -905,6 +905,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         ],
       ),
       floatingActionButton: _getFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 
