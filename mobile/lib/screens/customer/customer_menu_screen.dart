@@ -495,6 +495,9 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   Widget _buildMenuTab() {
     final bool isAcceptingOrders = _shopInfo?['is_accepting_orders'] == true || _shopInfo?['is_accepting_orders'] == 1;
     final String closedReason = _shopInfo?['closed_reason'] ?? 'Dükkan şu anda sipariş alımına kapalıdır.';
+    final String openingTime = _shopInfo?['opening_time'] ?? '08:00';
+    final String closingTime = _shopInfo?['closing_time'] ?? '22:00';
+    final bool autoHours = _shopInfo?['auto_hours_enabled'] == true || _shopInfo?['auto_hours_enabled'] == 1;
 
     if (_menu.isEmpty) {
       return const Center(child: Text('Dükkanın menüsünde henüz ürün bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
@@ -502,11 +505,56 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
 
     return Column(
       children: [
+        // Mesai Saatleri Bilgi Kartı (Müşteriler için her zaman görünür)
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isAcceptingOrders ? AppColors.primary.withOpacity(0.3) : AppColors.danger.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.access_time_filled, color: isAcceptingOrders ? AppColors.primary : AppColors.textMuted, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    autoHours ? 'Mesai Saatleri: $openingTime - $closingTime' : 'Çalışma Saatleri: $openingTime - $closingTime',
+                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isAcceptingOrders ? AppColors.success.withOpacity(0.15) : AppColors.danger.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isAcceptingOrders ? AppColors.success : AppColors.danger, width: 0.8),
+                ),
+                child: Text(
+                  isAcceptingOrders ? 'AÇIK' : 'KAPALI',
+                  style: TextStyle(
+                    color: isAcceptingOrders ? AppColors.success : AppColors.danger,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
         // Dükkan Kapalı veya Mesai Dışı Bilgilendirme Banner'ı
         if (!isAcceptingOrders)
           Container(
             width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.danger.withOpacity(0.15),
