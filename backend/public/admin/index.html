@@ -154,7 +154,7 @@
                 <header class="top-header">
                     <div>
                         <h1>Sistem Duyuruları</h1>
-                        <p class="subtitle">Dükkan sahiplerine ve müşterilere gönderilecek anlık bildirim ve duyurular</p>
+                        <p class="subtitle">Tüm dükkan sahiplerine gönderilecek anlık bildirim ve sistem duyuruları</p>
                     </div>
                     <button onclick="openNewAnnouncementModal()" class="btn-primary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -164,7 +164,7 @@
 
                 <div class="table-container glass-card">
                     <div class="table-header">
-                        <h3>Yayınlanan Duyurular</h3>
+                        <h3>Dükkan Sahiplerine Yayınlanan Duyurular</h3>
                         <button onclick="loadAnnouncements()" class="btn-refresh" title="Yenile">⟳ Yenile</button>
                     </div>
                     <div class="responsive-table">
@@ -174,7 +174,7 @@
                                     <th>ID</th>
                                     <th>Başlık</th>
                                     <th>İçerik</th>
-                                    <th>Hedef Kitle</th>
+                                    <th>Hedef</th>
                                     <th>Tarih</th>
                                     <th>Durum</th>
                                     <th>İşlemler</th>
@@ -196,31 +196,24 @@
     <div id="newAnnouncementModal" class="modal-backdrop" style="display: none;">
         <div class="modal-box glass-card">
             <div class="modal-header">
-                <h2>📢 Yeni Duyuru Yayınla</h2>
+                <h2>📢 Dükkan Sahiplerine Duyuru Yayınla</h2>
                 <button onclick="closeNewAnnouncementModal()" class="btn-close">&times;</button>
             </div>
             <form id="newAnnouncementForm" onsubmit="handleCreateAnnouncement(event)">
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Duyuru Başlığı *</label>
-                        <input type="text" id="announcementTitle" placeholder="Örn: Sistem Güncellemesi Hakkında" required>
+                        <input type="text" id="announcementTitle" placeholder="Örn: Sistem Güncellemesi & Bakım Bildirimi" required>
                     </div>
-                    <div class="form-group">
-                        <label>Hedef Kitle</label>
-                        <select id="announcementTarget" class="form-control" style="background: rgba(15, 23, 42, 0.8); color: #fff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; width: 100%;">
-                            <option value="SHOP_OWNER" selected>🏪 Sadece Dükkan Sahipleri</option>
-                            <option value="ALL">🌐 Tüm Kullanıcılar (Dükkan Sahipleri & Müşteriler)</option>
-                            <option value="CUSTOMER">👥 Sadece Müşteriler</option>
-                        </select>
-                    </div>
+                    <input type="hidden" id="announcementTarget" value="SHOP_OWNER">
                     <div class="form-group">
                         <label>Duyuru Metni / İçeriği *</label>
-                        <textarea id="announcementContent" rows="5" placeholder="Dükkan sahiplerine iletmek istediğiniz detaylı duyuru veya bakım mesajını buraya yazın..." required style="background: rgba(15, 23, 42, 0.8); color: #fff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; width: 100%;"></textarea>
+                        <textarea id="announcementContent" rows="5" placeholder="Dükkan sahiplerine iletmek istediğiniz duyuruyu buraya yazın..." required style="background: rgba(15, 23, 42, 0.8); color: #fff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; width: 100%;"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" onclick="closeNewAnnouncementModal()" class="btn-secondary">Vazgeç</button>
-                    <button type="submit" class="btn-primary">Duyuruyu Yayınla</button>
+                    <button type="submit" class="btn-primary">Duyuruyu Dükkan Sahiplerine Gönder</button>
                 </div>
             </form>
         </div>
