@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Dükkan ve Müşteri Giriş Paneli',
+                    'İşletme / Kullanıcı Giriş Paneli',
                     style: TextStyle(fontSize: 14, color: AppColors.textMuted),
                   ),
                   const SizedBox(height: 32),

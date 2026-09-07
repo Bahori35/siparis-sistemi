@@ -12,6 +12,12 @@ HEADERS = {
     'User-Agent': 'Antigravity-Agent'
 }
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+opener = urllib.request.build_opener(NoRedirect)
+
 def get_latest_run():
     req = urllib.request.Request(f'https://api.github.com/repos/{REPO}/actions/runs?per_page=5', headers=HEADERS)
     with urllib.request.urlopen(req) as resp:
@@ -29,10 +35,15 @@ def download_artifact(run_id):
             if 'Android' in art['name'] or 'APK' in art['name'] or 'release' in art['name'].lower():
                 download_url = art['archive_download_url']
                 print(f"Downloading artifact: {art['name']} ({art['size_in_bytes']} bytes)...")
-                art_req = urllib.request.Request(download_url, headers=HEADERS)
-                zip_path = os.path.join(os.getcwd(), 'build_output', 'apk_artifact.zip')
+                try:
+                    dl_req = urllib.request.Request(download_url, headers=HEADERS)
+                    opener.open(dl_req)
+                except urllib.error.HTTPError as e:
+                    real_url = e.headers['Location']
+                
+                zip_path = os.path.join(os.getcwd(), 'build_output', 'app-release.apk.zip')
                 os.makedirs(os.path.dirname(zip_path), exist_ok=True)
-                with urllib.request.urlopen(art_req) as art_resp:
+                with urllib.request.urlopen(urllib.request.Request(real_url)) as art_resp:
                     with open(zip_path, 'wb') as f:
                         f.write(art_resp.read())
                 print("Downloaded zip, extracting...")
