@@ -475,148 +475,206 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   // AKORDİYON / DİKEY MENÜ
   // ==========================================
   Widget _buildMenuTab() {
+    final bool isAcceptingOrders = _shopInfo?['is_accepting_orders'] == true || _shopInfo?['is_accepting_orders'] == 1;
+    final String closedReason = _shopInfo?['closed_reason'] ?? 'Dükkan şu anda sipariş alımına kapalıdır.';
+
     if (_menu.isEmpty) {
       return const Center(child: Text('Dükkanın menüsünde henüz ürün bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: _menu.length,
-      itemBuilder: (ctx, i) {
-        final category = _menu[i];
-        final products = category['products'] as List<dynamic>? ?? [];
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          decoration: BoxDecoration(
-            color: AppColors.cardBg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: i == 0,
-              iconColor: AppColors.primary,
-              collapsedIconColor: AppColors.textMuted,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              leading: Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.restaurant_menu_rounded, color: AppColors.primary, size: 22),
-              ),
-              title: Text(
-                category['category_name'],
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  '${products.length} Çeşit Ürün',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                ),
-              ),
-              children: products.map((p) {
-                final hasImage = p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty;
-                final hasDesc = p['description'] != null && p['description'].toString().trim().isNotEmpty;
-                final hasOptions = p['options'] != null && (p['options'] as List).isNotEmpty;
-
-                return Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
-                  ),
+    return Column(
+      children: [
+        // Dükkan Kapalı veya Mesai Dışı Bilgilendirme Banner'ı
+        if (!isAcceptingOrders)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.do_not_disturb_on, color: AppColors.danger, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1. Ürün Adı (En Üstte)
-                      Text(
-                        p['name'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                          letterSpacing: 0.2,
-                        ),
+                      const Text(
+                        'DÜKKAN SİPARİŞE KAPALI',
+                        style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
-                      if (hasDesc) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          p['description'],
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.3),
-                        ),
-                      ],
-
-                      // 2. Büyük Ürün Görseli (İsmin Altında)
-                      if (hasImage) ...[
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            p['image_url'],
-                            height: 160,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 12),
-
-                      // 3. Alt Kısım: Fiyat ve Sepete Ekle Butonu
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '₺${p['price']}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.success,
-                            ),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () => _openAddToCartDialog(p),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              elevation: 2,
-                            ),
-                            icon: Icon(hasOptions ? Icons.tune : Icons.add_shopping_cart, size: 18),
-                            label: Text(hasOptions ? 'Seç ve Ekle' : 'Sepete Ekle', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
+                      const SizedBox(height: 2),
+                      Text(
+                        closedReason,
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
           ),
-        );
-      },
+
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            itemCount: _menu.length,
+            itemBuilder: (ctx, i) {
+              final category = _menu[i];
+              final products = category['products'] as List<dynamic>? ?? [];
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    initiallyExpanded: i == 0,
+                    iconColor: AppColors.primary,
+                    collapsedIconColor: AppColors.textMuted,
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                    leading: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.restaurant_menu_rounded, color: AppColors.primary, size: 22),
+                    ),
+                    title: Text(
+                      category['category_name'],
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        '${products.length} Çeşit Ürün',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                      ),
+                    ),
+                    children: products.map((p) {
+                      final hasImage = p['image_url'] != null && p['image_url'].toString().trim().isNotEmpty;
+                      final hasDesc = p['description'] != null && p['description'].toString().trim().isNotEmpty;
+                      final hasOptions = p['options'] != null && (p['options'] as List).isNotEmpty;
+
+                      return Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.background.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 1. Ürün Adı (En Üstte)
+                            Text(
+                              p['name'],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            if (hasDesc) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                p['description'],
+                                style: const TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.3),
+                              ),
+                            ],
+
+                            // 2. Büyük Ürün Görseli (İsmin Altında)
+                            if (hasImage) ...[
+                              const SizedBox(height: 12),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  p['image_url'],
+                                  height: 160,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 12),
+
+                            // 3. Alt Kısım: Fiyat ve Sepete Ekle Butonu
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '₺${p['price']}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: isAcceptingOrders
+                                      ? () => _openAddToCartDialog(p)
+                                      : () {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(closedReason),
+                                              backgroundColor: AppColors.danger,
+                                            ),
+                                          );
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isAcceptingOrders ? AppColors.primary : Colors.grey.shade700,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    elevation: 2,
+                                  ),
+                                  icon: Icon(isAcceptingOrders ? (hasOptions ? Icons.tune : Icons.add_shopping_cart) : Icons.lock_outline, size: 18),
+                                  label: Text(
+                                    !isAcceptingOrders
+                                        ? 'Kapalı'
+                                        : (hasOptions ? 'Seç ve Ekle' : 'Sepete Ekle'),
+                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -686,14 +744,36 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              onPressed: _submitOrder,
-              child: const Text('Siparişi Tamamla & Gönder', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-            ),
+          Builder(
+            builder: (ctx) {
+              final bool isAcceptingOrders = _shopInfo?['is_accepting_orders'] == true || _shopInfo?['is_accepting_orders'] == 1;
+              final String closedReason = _shopInfo?['closed_reason'] ?? 'Dükkan şu anda sipariş alımına kapalıdır.';
+
+              return SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isAcceptingOrders ? AppColors.primary : Colors.grey.shade700,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: isAcceptingOrders
+                      ? _submitOrder
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(closedReason),
+                              backgroundColor: AppColors.danger,
+                            ),
+                          );
+                        },
+                  child: Text(
+                    isAcceptingOrders ? 'Siparişi Tamamla & Gönder' : 'Dükkan Kapalı (Sipariş Verilemez)',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

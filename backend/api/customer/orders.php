@@ -61,6 +61,41 @@ if ($method === 'POST') {
         $totalPrice = 0.0;
         $orderItemsToInsert = [];
 
+        // Dükkan açık mı ve mesai saatleri içinde mi kontrol et
+        $sCheck = $db->prepare("SELECT is_active, is_open, opening_time, closing_time, auto_hours_enabled FROM shops WHERE id = :id LIMIT 1");
+        $sCheck->execute([':id' => $shopId]);
+        $shopInfo = $sCheck->fetch();
+
+        if (!$shopInfo || (int)$shopInfo['is_active'] !== 1) {
+            $db->rollBack();
+            Response::error('Dükkan şu anda aktif değildir.', 400);
+        }
+
+        $isOpenManual = (int)$shopInfo['is_open'] === 1;
+        $autoHours = (int)$shopInfo['auto_hours_enabled'] === 1;
+        $openTime = $shopInfo['opening_time'] ?: '08:00';
+        $closeTime = $shopInfo['closing_time'] ?: '22:00';
+        $currentTime = date('H:i');
+        $isWithinHours = true;
+
+        if ($autoHours) {
+            if ($openTime <= $closeTime) {
+                $isWithinHours = ($currentTime >= $openTime && $currentTime <= $closeTime);
+            } else {
+                $isWithinHours = ($currentTime >= $openTime || $currentTime <= $closeTime);
+            }
+        }
+
+        if (!$isOpenManual) {
+            $db->rollBack();
+            Response::error('Dükkan şu anda sipariş alımına kapalıdır.', 400);
+        }
+
+        if (!$isWithinHours) {
+            $db->rollBack();
+            Response::error("Dükkan mesai saatleri dışındadır. Sipariş kabul edilmiyor. (Mesai: {$openTime} - {$closeTime})", 400);
+        }
+
         // Ürünleri doğrula ve güncel dükkan fiyatlarını hesapla (Güvenlik: Fiyat frontend'den alınmaz!)
         foreach ($items as $item) {
             $productId = (int)($item['product_id'] ?? 0);

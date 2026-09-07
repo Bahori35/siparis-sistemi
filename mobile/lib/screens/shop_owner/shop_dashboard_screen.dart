@@ -22,6 +22,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
   List<dynamic> _categories = [];
   List<dynamic> _customers = [];
   List<dynamic> _announcements = [];
+  Map<String, dynamic>? _shopSettings;
   bool _isLoading = false;
   Timer? _liveTimer;
 
@@ -73,6 +74,17 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           });
         }
       }
+
+      // 3. Dükkan Ayarları
+      final settRes = await http.get(Uri.parse(ApiConfig.shopSettings), headers: headers);
+      if (settRes.statusCode == 200 && mounted) {
+        final newSett = jsonDecode(settRes.body)['data'] ?? {};
+        if (jsonEncode(_shopSettings) != jsonEncode(newSett)) {
+          setState(() {
+            _shopSettings = newSett;
+          });
+        }
+      }
     } catch (e) {
       // Sessiz polling hatası
     }
@@ -94,6 +106,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       final catRes = await http.get(Uri.parse(ApiConfig.shopCategories), headers: headers);
       final custRes = await http.get(Uri.parse(ApiConfig.shopCustomers), headers: headers);
       final annRes = await http.get(Uri.parse(ApiConfig.shopAnnouncements), headers: headers);
+      final settRes = await http.get(Uri.parse(ApiConfig.shopSettings), headers: headers);
 
       if (mounted) {
         setState(() {
@@ -102,6 +115,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           if (catRes.statusCode == 200) _categories = jsonDecode(catRes.body)['data'] ?? [];
           if (custRes.statusCode == 200) _customers = jsonDecode(custRes.body)['data'] ?? [];
           if (annRes.statusCode == 200) _announcements = jsonDecode(annRes.body)['data'] ?? [];
+          if (settRes.statusCode == 200) _shopSettings = jsonDecode(settRes.body)['data'] ?? {};
         });
       }
     } catch (e) {
@@ -109,6 +123,188 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     } finally {
       if (mounted && showSpinner) setState(() => _isLoading = false);
     }
+  }
+
+  // Dükkanı Aç / Kapat Toggle
+  Future<void> _toggleShopOpenStatus() async {
+    final currentStatus = _shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true;
+    final nextStatus = !currentStatus;
+
+    final auth = Provider.of<AuthService>(context, listen: false);
+    try {
+      final res = await http.put(
+        Uri.parse(ApiConfig.shopSettings),
+        headers: {
+          'Authorization': 'Bearer ${auth.token}',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({'is_open': nextStatus ? 1 : 0}),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body)['data'];
+        setState(() {
+          _shopSettings = data;
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(nextStatus ? '🟢 Dükkan sipariş alımına AÇILDI.' : '🔴 Dükkan sipariş alımına KAPATILDI.'),
+            backgroundColor: nextStatus ? AppColors.success : AppColors.danger,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Dükkan durumu güncelleme hatası: $e');
+    }
+  }
+
+  // Mesai Saatleri Ayarlama Penceresi
+  void _openWorkHoursDialog() {
+    String openTime = _shopSettings?['opening_time'] ?? '08:00';
+    String closeTime = _shopSettings?['closing_time'] ?? '22:00';
+    bool autoHours = (_shopSettings?['auto_hours_enabled'] == 1 || _shopSettings?['auto_hours_enabled'] == true);
+
+    TimeOfDay parseTime(String timeStr) {
+      final parts = timeStr.split(':');
+      return TimeOfDay(hour: int.tryParse(parts[0]) ?? 8, minute: int.tryParse(parts[1]) ?? 0);
+    }
+
+    String formatTime(TimeOfDay tod) {
+      final h = tod.hour.toString().padLeft(2, '0');
+      final m = tod.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    }
+
+    TimeOfDay selectedOpen = parseTime(openTime);
+    TimeOfDay selectedClose = parseTime(closeTime);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.access_time_filled, color: AppColors.primary),
+              SizedBox(width: 8),
+              Text('Mesai Saatleri Ayarı', style: TextStyle(color: Colors.white, fontSize: 18)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                activeColor: AppColors.primary,
+                title: const Text('Mesai Saatlerini Uygula', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                subtitle: const Text('Aktifken müşteriler sadece bu saatler içinde sipariş verebilir.', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                value: autoHours,
+                onChanged: (val) {
+                  setDialogState(() => autoHours = val);
+                },
+              ),
+              const Divider(color: Colors.white12),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Açılış Saati:', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.wb_sunny_outlined, size: 16, color: AppColors.primary),
+                    label: Text(formatTime(selectedOpen), style: const TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: selectedOpen,
+                      );
+                      if (picked != null) {
+                        setDialogState(() => selectedOpen = picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Kapanış Saati:', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.nights_stay_outlined, size: 16, color: AppColors.primary),
+                    label: Text(formatTime(selectedClose), style: const TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: selectedClose,
+                      );
+                      if (picked != null) {
+                        setDialogState(() => selectedClose = picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('İptal', style: TextStyle(color: AppColors.textMuted)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () async {
+                final auth = Provider.of<AuthService>(context, listen: false);
+                final finalOpen = formatTime(selectedOpen);
+                final finalClose = formatTime(selectedClose);
+
+                final res = await http.put(
+                  Uri.parse(ApiConfig.shopSettings),
+                  headers: {
+                    'Authorization': 'Bearer ${auth.token}',
+                    'Content-Type': 'application/json'
+                  },
+                  body: jsonEncode({
+                    'opening_time': finalOpen,
+                    'closing_time': finalClose,
+                    'auto_hours_enabled': autoHours ? 1 : 0,
+                  }),
+                );
+
+                if (res.statusCode == 200) {
+                  final data = jsonDecode(res.body)['data'];
+                  setState(() {
+                    _shopSettings = data;
+                  });
+                  if (!context.mounted) return;
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Mesai saatleri başarıyla kaydedildi.'), backgroundColor: AppColors.success),
+                  );
+                }
+              },
+              child: const Text('Kaydet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // ==========================================
@@ -1044,12 +1240,58 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           ],
         ),
         actions: [
+          // Dükkan Açık / Kapalı Toggle Butonu
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Tooltip(
+              message: (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true)
+                  ? 'Dükkan Açık (Kapatmak için tıkla)'
+                  : 'Dükkan Kapalı (Açmak için tıkla)',
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true)
+                      ? AppColors.success.withOpacity(0.2)
+                      : AppColors.danger.withOpacity(0.2),
+                  foregroundColor: (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true)
+                      ? AppColors.success
+                      : AppColors.danger,
+                  side: BorderSide(
+                    color: (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true)
+                        ? AppColors.success
+                        : AppColors.danger,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  elevation: 0,
+                ),
+                icon: Icon(
+                  (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true)
+                      ? Icons.storefront
+                      : Icons.storefront_outlined,
+                  size: 16,
+                ),
+                label: Text(
+                  (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true) ? 'AÇIK' : 'KAPALI',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                onPressed: _toggleShopOpenStatus,
+              ),
+            ),
+          ),
+          // Mesai Saatleri Ayar Butonu
+          IconButton(
+            icon: const Icon(Icons.access_time, color: AppColors.accent),
+            tooltip: 'Mesai Saatleri',
+            onPressed: _openWorkHoursDialog,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Yenile',
             onPressed: _loadAllData,
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.danger),
+            tooltip: 'Çıkış',
             onPressed: () async {
               await auth.logout();
               if (!context.mounted) return;

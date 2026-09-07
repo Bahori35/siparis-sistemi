@@ -22,12 +22,41 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 // 1. Dükkan bilgilerini al
-$shopStmt = $db->prepare("SELECT id, name, phone, address, is_active FROM shops WHERE id = :id LIMIT 1");
+$shopStmt = $db->prepare("SELECT id, name, phone, address, is_active, is_open, opening_time, closing_time, auto_hours_enabled 
+                          FROM shops 
+                          WHERE id = :id LIMIT 1");
 $shopStmt->execute([':id' => $shopId]);
 $shop = $shopStmt->fetch();
 
 if (!$shop || (int)$shop['is_active'] !== 1) {
     Response::error('Bağlı olduğunuz dükkan şu anda hizmet verememektedir.', 403);
+}
+
+// Dükkan açık mı, mesai saatinde mi hesapla
+$isOpenManual = (int)$shop['is_open'] === 1;
+$autoHours = (int)$shop['auto_hours_enabled'] === 1;
+$openTime = $shop['opening_time'] ?: '08:00';
+$closeTime = $shop['closing_time'] ?: '22:00';
+
+$currentTime = date('H:i');
+$isWithinHours = true;
+
+if ($autoHours) {
+    if ($openTime <= $closeTime) {
+        // Örn: 08:00 - 22:00
+        $isWithinHours = ($currentTime >= $openTime && $currentTime <= $closeTime);
+    } else {
+        // Geceyi aşan mesai: Örn: 18:00 - 02:00
+        $isWithinHours = ($currentTime >= $openTime || $currentTime <= $closeTime);
+    }
+}
+
+$isAcceptingOrders = $isOpenManual && $isWithinHours;
+$closedReason = '';
+if (!$isOpenManual) {
+    $closedReason = 'Dükkan şu anda geçici olarak siparişe kapalıdır.';
+} elseif (!$isWithinHours) {
+    $closedReason = "Dükkan mesai saatleri dışındadır. (Mesai: {$openTime} - {$closeTime})";
 }
 
 // 2. Dükkana ait aktif kategorileri çek
@@ -80,10 +109,16 @@ foreach ($categories as $cat) {
 
 Response::success([
     'shop' => [
-        'id'      => (int)$shop['id'],
-        'name'    => $shop['name'],
-        'phone'   => $shop['phone'],
-        'address' => $shop['address']
+        'id'                  => (int)$shop['id'],
+        'name'                => $shop['name'],
+        'phone'               => $shop['phone'],
+        'address'             => $shop['address'],
+        'is_open'             => (bool)$isOpenManual,
+        'is_accepting_orders' => (bool)$isAcceptingOrders,
+        'closed_reason'       => $closedReason,
+        'opening_time'        => $openTime,
+        'closing_time'        => $closeTime,
+        'auto_hours_enabled'  => (bool)$autoHours
     ],
     'menu' => $groupedMenu
 ], 'Menü başarıyla getirildi.');

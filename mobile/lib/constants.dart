@@ -18,6 +18,9 @@ class ApiConfig {
   static const String customerMenu = '$baseUrl/customer/menu.php';
   static const String customerOrders = '$baseUrl/customer/orders.php';
   
+  // Dükkan Ayarları (Aç/Kapat & Mesai Saatleri)
+  static const String shopSettings = '$baseUrl/shop/settings.php';
+  
   // Duyurular
   static const String shopAnnouncements = '$baseUrl/shop/announcements.php';
 }
