@@ -810,17 +810,18 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     }
   }
 
-  void _openAddCustomerDialog() {
-    final userCtrl = TextEditingController();
+  void _openAddCustomerDialog({Map<String, dynamic>? editCustomer}) {
+    final isEditing = editCustomer != null;
+    final userCtrl = TextEditingController(text: editCustomer?['username'] ?? '');
     final passCtrl = TextEditingController();
-    final nameCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
+    final nameCtrl = TextEditingController(text: editCustomer?['full_name'] ?? '');
+    final phoneCtrl = TextEditingController(text: editCustomer?['phone'] ?? '');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
-        title: const Text('Yeni Müşteri Tanımla', style: TextStyle(color: Colors.white)),
+        title: Text(isEditing ? 'Müşteriyi Düzenle' : 'Yeni Müşteri Tanımla', style: const TextStyle(color: Colors.white)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -828,7 +829,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               TextField(
                 controller: nameCtrl,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Müşteri Ad Soyad (Ofis/Masa No)', labelStyle: TextStyle(color: AppColors.textMuted)),
+                decoration: const InputDecoration(labelText: 'Müşteri Ad Soyad (Ofis/Masa No) *', labelStyle: TextStyle(color: AppColors.textMuted)),
               ),
               TextField(
                 controller: phoneCtrl,
@@ -838,13 +839,16 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               TextField(
                 controller: userCtrl,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Giriş Kullanıcı Adı', labelStyle: TextStyle(color: AppColors.textMuted)),
+                decoration: const InputDecoration(labelText: 'Giriş Kullanıcı Adı *', labelStyle: TextStyle(color: AppColors.textMuted)),
               ),
               TextField(
                 controller: passCtrl,
                 obscureText: true,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Giriş Şifresi', labelStyle: TextStyle(color: AppColors.textMuted)),
+                decoration: InputDecoration(
+                  labelText: isEditing ? 'Yeni Şifre (Değişmeyecekse boş bırakın)' : 'Giriş Şifresi *',
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                ),
               ),
             ],
           ),
@@ -855,28 +859,115 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
               final auth = Provider.of<AuthService>(context, listen: false);
-              await http.post(
-                Uri.parse(ApiConfig.shopCustomers),
-                headers: {
-                  'Authorization': 'Bearer ${auth.token}',
-                  'Content-Type': 'application/json'
-                },
-                body: jsonEncode({
-                  'full_name': nameCtrl.text.trim(),
-                  'phone': phoneCtrl.text.trim(),
-                  'username': userCtrl.text.trim(),
-                  'password': passCtrl.text.trim(),
-                }),
-              );
-              if (!context.mounted) return;
-              Navigator.pop(ctx);
-              _loadAllData();
+              final headers = {
+                'Authorization': 'Bearer ${auth.token}',
+                'Content-Type': 'application/json'
+              };
+
+              http.Response res;
+              if (isEditing) {
+                res = await http.put(
+                  Uri.parse(ApiConfig.shopCustomers),
+                  headers: headers,
+                  body: jsonEncode({
+                    'id': editCustomer['id'],
+                    'full_name': nameCtrl.text.trim(),
+                    'phone': phoneCtrl.text.trim(),
+                    'username': userCtrl.text.trim(),
+                    'password': passCtrl.text.trim(),
+                  }),
+                );
+              } else {
+                res = await http.post(
+                  Uri.parse(ApiConfig.shopCustomers),
+                  headers: headers,
+                  body: jsonEncode({
+                    'full_name': nameCtrl.text.trim(),
+                    'phone': phoneCtrl.text.trim(),
+                    'username': userCtrl.text.trim(),
+                    'password': passCtrl.text.trim(),
+                  }),
+                );
+              }
+
+              final data = jsonDecode(res.body);
+              if (res.statusCode == 200 || res.statusCode == 201) {
+                if (!context.mounted) return;
+                Navigator.pop(ctx);
+                _loadAllData();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(isEditing ? 'Müşteri bilgileri güncellendi.' : 'Müşteri hesabı başarıyla oluşturuldu.'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              } else {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(data['message'] ?? 'İşlem başarısız.'), backgroundColor: AppColors.danger),
+                );
+              }
             },
-            child: const Text('Müşteriyi Kaydet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(
+              isEditing ? 'Güncelle' : 'Müşteriyi Kaydet',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  void _deleteCustomer(int customerId, String customerName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: const Text('Müşteriyi Sil', style: TextStyle(color: Colors.white)),
+        content: Text('"$customerName" adlı müşteriyi ve tüm sipariş geçmişini silmek istediğinize emin misiniz?', style: const TextStyle(color: AppColors.textMuted)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Evet, Sil', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      try {
+        final res = await http.delete(
+          Uri.parse('${ApiConfig.shopCustomers}?id=$customerId'),
+          headers: {
+            'Authorization': 'Bearer ${auth.token}',
+            'Content-Type': 'application/json'
+          },
+        );
+
+        final data = jsonDecode(res.body);
+        if (res.statusCode == 200 && data['success'] == true) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('"$customerName" başarıyla silindi.'), backgroundColor: AppColors.success),
+          );
+          _loadAllData();
+        } else {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Müşteri silinemedi.'), backgroundColor: AppColors.danger),
+          );
+        }
+      } catch (e) {
+        debugPrint('Müşteri silme hatası: $e');
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: AppColors.danger),
+        );
+      }
+    }
   }
 
   @override
@@ -1278,6 +1369,19 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             leading: const CircleAvatar(backgroundColor: AppColors.primary, child: Icon(Icons.person, color: Colors.white)),
             title: Text(c['full_name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             subtitle: Text('Kullanıcı Adı: @${c['username']} • Tel: ${c['phone'] ?? '-'}', style: const TextStyle(color: AppColors.textMuted)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.primary, size: 20),
+                  onPressed: () => _openAddCustomerDialog(editCustomer: c),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
+                  onPressed: () => _deleteCustomer(c['id'], c['full_name']),
+                ),
+              ],
+            ),
           ),
         );
       },

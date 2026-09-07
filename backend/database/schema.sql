@@ -116,7 +116,7 @@ CREATE TABLE orders (
         
     CONSTRAINT fk_orders_customer_id 
         FOREIGN KEY (customer_id) REFERENCES users(id) 
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+        ON DELETE CASCADE ON UPDATE CASCADE,
         
     INDEX idx_orders_shop_status_date (shop_id, status, created_at),
     INDEX idx_orders_customer (customer_id, created_at)
