@@ -26,6 +26,7 @@ CREATE TABLE shops (
     opening_time VARCHAR(5) NULL DEFAULT '08:00' COMMENT 'Mesai Başlangıç (08:00)',
     closing_time VARCHAR(5) NULL DEFAULT '22:00' COMMENT 'Mesai Bitiş (22:00)',
     auto_hours_enabled TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1: Otomatik mesai saati aktif, 0: Sadece manuel',
+    closed_note VARCHAR(255) NULL COMMENT 'Kapatılma sebebi / Müşteriye gösterilecek not',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_shops_is_active (is_active)

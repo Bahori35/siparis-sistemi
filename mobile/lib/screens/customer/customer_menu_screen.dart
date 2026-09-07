@@ -65,6 +65,24 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
           });
         }
       }
+
+      // Dükkanın açık/kapalı durumunu ve notunu da anlık sessizce güncelle
+      final menuRes = await http.get(
+        Uri.parse(ApiConfig.customerMenu),
+        headers: {
+          'Authorization': 'Bearer ${auth.token}',
+          'Content-Type': 'application/json'
+        },
+      );
+      if (menuRes.statusCode == 200 && mounted) {
+        final data = jsonDecode(menuRes.body)['data'];
+        final newShop = data['shop'];
+        if (jsonEncode(_shopInfo) != jsonEncode(newShop)) {
+          setState(() {
+            _shopInfo = newShop;
+          });
+        }
+      }
     } catch (_) {}
   }
 

@@ -62,7 +62,7 @@ if ($method === 'POST') {
         $orderItemsToInsert = [];
 
         // Dükkan açık mı ve mesai saatleri içinde mi kontrol et
-        $sCheck = $db->prepare("SELECT is_active, is_open, opening_time, closing_time, auto_hours_enabled FROM shops WHERE id = :id LIMIT 1");
+        $sCheck = $db->prepare("SELECT is_active, is_open, opening_time, closing_time, auto_hours_enabled, closed_note FROM shops WHERE id = :id LIMIT 1");
         $sCheck->execute([':id' => $shopId]);
         $shopInfo = $sCheck->fetch();
 
@@ -75,6 +75,7 @@ if ($method === 'POST') {
         $autoHours = (int)$shopInfo['auto_hours_enabled'] === 1;
         $openTime = $shopInfo['opening_time'] ?: '08:00';
         $closeTime = $shopInfo['closing_time'] ?: '22:00';
+        $closedNote = trim((string)($shopInfo['closed_note'] ?? ''));
         $currentTime = date('H:i');
         $isWithinHours = true;
 
@@ -88,7 +89,8 @@ if ($method === 'POST') {
 
         if (!$isOpenManual) {
             $db->rollBack();
-            Response::error('Dükkan şu anda sipariş alımına kapalıdır.', 400);
+            $msg = $closedNote !== '' ? $closedNote : 'Dükkan şu anda sipariş alımına kapalıdır.';
+            Response::error($msg, 400);
         }
 
         if (!$isWithinHours) {

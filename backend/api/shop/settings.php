@@ -21,7 +21,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     // Dükkan ayarlarını, mesai saatlerini ve açık/kapalı durumunu getir
-    $stmt = $db->prepare("SELECT id, name, phone, address, is_active, is_open, opening_time, closing_time, auto_hours_enabled 
+    $stmt = $db->prepare("SELECT id, name, phone, address, is_active, is_open, opening_time, closing_time, auto_hours_enabled, closed_note 
                           FROM shops 
                           WHERE id = :id LIMIT 1");
     $stmt->execute([':id' => $shopId]);
@@ -61,6 +61,11 @@ if ($method === 'PUT') {
         $params[':auto_hours_enabled'] = (int)$body['auto_hours_enabled'];
     }
 
+    if (array_key_exists('closed_note', $body)) {
+        $fields[] = 'closed_note = :closed_note';
+        $params[':closed_note'] = $body['closed_note'] !== null ? trim((string)$body['closed_note']) : null;
+    }
+
     if (empty($fields)) {
         Response::error('Güncellenecek bir ayar belirtilmedi.', 422);
     }
@@ -70,7 +75,7 @@ if ($method === 'PUT') {
     $stmt->execute($params);
 
     // Güncel durumu dön
-    $stmtGet = $db->prepare("SELECT id, name, is_open, opening_time, closing_time, auto_hours_enabled FROM shops WHERE id = :id");
+    $stmtGet = $db->prepare("SELECT id, name, is_open, opening_time, closing_time, auto_hours_enabled, closed_note FROM shops WHERE id = :id");
     $stmtGet->execute([':id' => $shopId]);
     $updated = $stmtGet->fetch();
 

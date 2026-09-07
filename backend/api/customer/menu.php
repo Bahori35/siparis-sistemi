@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 // 1. Dükkan bilgilerini al
-$shopStmt = $db->prepare("SELECT id, name, phone, address, is_active, is_open, opening_time, closing_time, auto_hours_enabled 
+$shopStmt = $db->prepare("SELECT id, name, phone, address, is_active, is_open, opening_time, closing_time, auto_hours_enabled, closed_note 
                           FROM shops 
                           WHERE id = :id LIMIT 1");
 $shopStmt->execute([':id' => $shopId]);
@@ -37,6 +37,7 @@ $isOpenManual = (int)$shop['is_open'] === 1;
 $autoHours = (int)$shop['auto_hours_enabled'] === 1;
 $openTime = $shop['opening_time'] ?: '08:00';
 $closeTime = $shop['closing_time'] ?: '22:00';
+$closedNote = trim((string)($shop['closed_note'] ?? ''));
 
 $currentTime = date('H:i');
 $isWithinHours = true;
@@ -54,7 +55,7 @@ if ($autoHours) {
 $isAcceptingOrders = $isOpenManual && $isWithinHours;
 $closedReason = '';
 if (!$isOpenManual) {
-    $closedReason = 'Dükkan şu anda geçici olarak siparişe kapalıdır.';
+    $closedReason = $closedNote !== '' ? $closedNote : 'Dükkan şu anda geçici olarak siparişe kapalıdır.';
 } elseif (!$isWithinHours) {
     $closedReason = "Dükkan mesai saatleri dışındadır. (Mesai: {$openTime} - {$closeTime})";
 }

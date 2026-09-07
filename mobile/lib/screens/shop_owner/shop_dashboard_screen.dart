@@ -125,20 +125,87 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     }
   }
 
-  // Dükkanı Aç / Kapat Toggle
+  // Dükkanı Aç / Kapat Toggle (Kapatırken Not Girişi ile)
   Future<void> _toggleShopOpenStatus() async {
     final currentStatus = _shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true;
     final nextStatus = !currentStatus;
 
+    String? closedNote;
+
+    // Eğer dükkan kapatılıyorsa, dükkan sahibine müşterilerin göreceği bir not / açıklama sor
+    if (!nextStatus) {
+      final noteCtrl = TextEditingController(text: _shopSettings?['closed_note'] ?? '');
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.storefront_outlined, color: AppColors.danger),
+              SizedBox(width: 8),
+              Text('Dükkanı Kapat', style: TextStyle(color: Colors.white, fontSize: 18)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Dükkanı kapattığınızda müşteriler ürün ekleyemez ve sipariş veremez.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: noteCtrl,
+                style: const TextStyle(color: Colors.white),
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Kapanma Sebebi / Müşteri Notu',
+                  hintText: 'Örn: Yoğunluk sebebiyle 1 saat kapalıyız / Özel durum',
+                  labelStyle: TextStyle(color: AppColors.textMuted),
+                  hintStyle: TextStyle(color: Colors.white24, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Vazgeç', style: TextStyle(color: AppColors.textMuted)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Dükkanı Kapat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+      closedNote = noteCtrl.text.trim();
+    }
+
     final auth = Provider.of<AuthService>(context, listen: false);
     try {
+      final payload = <String, dynamic>{
+        'is_open': nextStatus ? 1 : 0,
+      };
+      if (!nextStatus) {
+        payload['closed_note'] = (closedNote != null && closedNote.isNotEmpty) ? closedNote : 'Dükkan şu anda geçici olarak siparişe kapalıdır.';
+      }
+
       final res = await http.put(
         Uri.parse(ApiConfig.shopSettings),
         headers: {
           'Authorization': 'Bearer ${auth.token}',
           'Content-Type': 'application/json'
         },
-        body: jsonEncode({'is_open': nextStatus ? 1 : 0}),
+        body: jsonEncode(payload),
       );
 
       if (res.statusCode == 200) {
