@@ -143,3 +143,17 @@ CREATE TABLE order_items (
         
     INDEX idx_order_items_order (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------
+-- 7. ANNOUNCEMENTS TABLOSU (Sistem Duyuruları)
+-- ----------------------------------------------------------
+CREATE TABLE announcements (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL COMMENT 'Duyuru Başlığı',
+    content TEXT NOT NULL COMMENT 'Duyuru Detayı / Metni',
+    target_role ENUM('ALL', 'SHOP_OWNER', 'CUSTOMER') NOT NULL DEFAULT 'SHOP_OWNER' COMMENT 'Hedef Kitle',
+    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1: Yayında, 0: Pasif',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_announcements_active (is_active, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

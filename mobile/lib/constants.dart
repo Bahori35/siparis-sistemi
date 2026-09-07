@@ -17,6 +17,9 @@ class ApiConfig {
   // Müşteri
   static const String customerMenu = '$baseUrl/customer/menu.php';
   static const String customerOrders = '$baseUrl/customer/orders.php';
+  
+  // Duyurular
+  static const String shopAnnouncements = '$baseUrl/shop/announcements.php';
 }
 
 class AppColors {

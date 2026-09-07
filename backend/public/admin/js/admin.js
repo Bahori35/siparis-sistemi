@@ -264,6 +264,148 @@ async function deleteShop(shopId, shopName) {
     }
 }
 
+function switchTab(tab) {
+    const navShops = document.getElementById('navShops');
+    const navAnnouncements = document.getElementById('navAnnouncements');
+    const shopsView = document.getElementById('shopsTabView');
+    const announcementsView = document.getElementById('announcementsTabView');
+
+    if (tab === 'shops') {
+        navShops.classList.add('active');
+        navAnnouncements.classList.remove('active');
+        shopsView.style.display = 'block';
+        announcementsView.style.display = 'none';
+        loadShops();
+    } else if (tab === 'announcements') {
+        navShops.classList.remove('active');
+        navAnnouncements.classList.add('active');
+        shopsView.style.display = 'none';
+        announcementsView.style.display = 'block';
+        loadAnnouncements();
+    }
+}
+
+function openNewAnnouncementModal() {
+    document.getElementById('newAnnouncementForm').reset();
+    document.getElementById('newAnnouncementModal').style.display = 'flex';
+}
+
+function closeNewAnnouncementModal() {
+    document.getElementById('newAnnouncementModal').style.display = 'none';
+}
+
+async function loadAnnouncements() {
+    const tableBody = document.getElementById('announcementsTableBody');
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Duyurular yükleniyor...</td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE}/superadmin/announcements.php`, {
+            headers: { 'Authorization': `Bearer ${superAdminToken}` }
+        });
+
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+            handleLogout();
+            return;
+        }
+
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+
+        const list = data.data || [];
+        renderAnnouncements(list);
+    } catch (err) {
+        tableBody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Hata: ${err.message}</td></tr>`;
+    }
+}
+
+function renderAnnouncements(list) {
+    const tableBody = document.getElementById('announcementsTableBody');
+    if (list.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Henüz yayınlanmış bir duyuru yok.</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = list.map(a => {
+        let targetBadge = '<span class="badge badge-primary">🏪 Dükkan Sahipleri</span>';
+        if (a.target_role === 'ALL') targetBadge = '<span class="badge badge-success">🌐 Herkes</span>';
+        if (a.target_role === 'CUSTOMER') targetBadge = '<span class="badge badge-warning">👥 Müşteriler</span>';
+
+        return `
+            <tr>
+                <td>#${a.id}</td>
+                <td><strong>${escapeHtml(a.title)}</strong></td>
+                <td style="max-width: 300px; white-space: pre-wrap; color: var(--text-muted); font-size: 13px;">${escapeHtml(a.content)}</td>
+                <td>${targetBadge}</td>
+                <td><small style="color:var(--text-muted)">${new Date(a.created_at).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</small></td>
+                <td>
+                    <span class="status-indicator ${parseInt(a.is_active) === 1 ? 'status-active' : 'status-inactive'}">
+                        ${parseInt(a.is_active) === 1 ? 'Yayında' : 'Pasif'}
+                    </span>
+                </td>
+                <td>
+                    <button onclick="deleteAnnouncement(${a.id}, '${escapeHtml(a.title)}')" class="btn-action btn-danger" title="Duyuruyu Sil">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Sil
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function handleCreateAnnouncement(e) {
+    e.preventDefault();
+    const title = document.getElementById('announcementTitle').value.trim();
+    const target_role = document.getElementById('announcementTarget').value;
+    const content = document.getElementById('announcementContent').value.trim();
+
+    try {
+        const res = await fetch(`${API_BASE}/superadmin/announcements.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${superAdminToken}`
+            },
+            body: JSON.stringify({ title, target_role, content, is_active: 1 })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            throw new Error(data.message || 'Duyuru yayınlanamadı.');
+        }
+
+        closeNewAnnouncementModal();
+        showToast('Duyuru tüm dükkan sahiplerine başarıyla iletildi!');
+        loadAnnouncements();
+    } catch (err) {
+        alert('Hata: ' + err.message);
+    }
+}
+
+async function deleteAnnouncement(id, title) {
+    if (!confirm(`"${title}" başlıklı duyuruyu silmek istediğinize emin misiniz?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/superadmin/announcements.php?id=${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${superAdminToken}` }
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message);
+
+        showToast('Duyuru yayından kaldırıldı ve silindi.');
+        loadAnnouncements();
+    } catch (err) {
+        alert('Hata: ' + err.message);
+    }
+}
+
 function escapeHtml(str) {
     if (!str) return '';
     return String(str)

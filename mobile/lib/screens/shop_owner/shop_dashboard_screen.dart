@@ -15,11 +15,12 @@ class ShopDashboardScreen extends StatefulWidget {
 }
 
 class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
-  int _currentTab = 0; // 0: Siparişler, 1: Ürünler, 2: Kategoriler, 3: Müşteriler
+  int _currentTab = 0; // 0: Siparişler, 1: Ürünler, 2: Seçenekler, 3: Kategoriler, 4: Müşteriler, 5: Duyurular
   List<dynamic> _orders = [];
   List<dynamic> _products = [];
   List<dynamic> _categories = [];
   List<dynamic> _customers = [];
+  List<dynamic> _announcements = [];
   bool _isLoading = false;
 
   @override
@@ -41,11 +42,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       final prodRes = await http.get(Uri.parse(ApiConfig.shopProducts), headers: headers);
       final catRes = await http.get(Uri.parse(ApiConfig.shopCategories), headers: headers);
       final custRes = await http.get(Uri.parse(ApiConfig.shopCustomers), headers: headers);
+      final annRes = await http.get(Uri.parse(ApiConfig.shopAnnouncements), headers: headers);
 
       if (ordRes.statusCode == 200) _orders = jsonDecode(ordRes.body)['data'] ?? [];
       if (prodRes.statusCode == 200) _products = jsonDecode(prodRes.body)['data'] ?? [];
       if (catRes.statusCode == 200) _categories = jsonDecode(catRes.body)['data'] ?? [];
       if (custRes.statusCode == 200) _customers = jsonDecode(custRes.body)['data'] ?? [];
+      if (annRes.statusCode == 200) _announcements = jsonDecode(annRes.body)['data'] ?? [];
     } catch (e) {
       debugPrint('Veri çekme hatası: $e');
     } finally {
@@ -1016,6 +1019,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Seçenekler'),
           BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Kategoriler'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Müşteriler'),
+          BottomNavigationBarItem(icon: Icon(Icons.campaign), label: 'Duyurular'),
         ],
       ),
       floatingActionButton: _getFab(),
@@ -1064,7 +1068,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     if (_currentTab == 1) return _buildProductsTab();
     if (_currentTab == 2) return _buildOptionsTab();
     if (_currentTab == 3) return _buildCategoriesTab();
-    return _buildCustomersTab();
+    if (_currentTab == 4) return _buildCustomersTab();
+    return _buildAnnouncementsTab();
   }
 
   Widget _buildOrdersTab() {
@@ -1379,6 +1384,94 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 IconButton(
                   icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
                   onPressed: () => _deleteCustomer(c['id'], c['full_name']),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAnnouncementsTab() {
+    if (_announcements.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.campaign_outlined, size: 64, color: AppColors.textMuted),
+            SizedBox(height: 12),
+            Text('Henüz yayınlanmış bir duyuru bulunmuyor.', style: TextStyle(color: AppColors.textMuted, fontSize: 15)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _announcements.length,
+      itemBuilder: (ctx, i) {
+        final ann = _announcements[i];
+        final dateStr = ann['created_at'] != null ? ann['created_at'].toString().split(' ').first : '';
+
+        return Card(
+          color: AppColors.cardBg,
+          margin: const EdgeInsets.only(bottom: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: AppColors.primary.withOpacity(0.3), width: 1),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.campaign, color: AppColors.primary, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ann['title'] ?? 'Duyuru',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (dateStr.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              dateStr,
+                              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Divider(color: Colors.white10, height: 1),
+                const SizedBox(height: 12),
+                Text(
+                  ann['content'] ?? '',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
