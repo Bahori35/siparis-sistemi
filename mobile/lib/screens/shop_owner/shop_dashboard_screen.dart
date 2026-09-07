@@ -130,7 +130,10 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               Navigator.pop(ctx);
               _loadAllData();
             },
-            child: Text(isEditing ? 'Güncelle' : 'Kaydet'),
+            child: Text(
+              isEditing ? 'Güncelle' : 'Kaydet',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -724,7 +727,10 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   Navigator.pop(ctx);
                   _loadAllData();
                 },
-                child: Text(isEditing ? 'Güncelle' : 'Ürünü Ekle'),
+                child: Text(
+                  isEditing ? 'Güncelle' : 'Ürünü Ekle',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           );
@@ -866,7 +872,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               Navigator.pop(ctx);
               _loadAllData();
             },
-            child: const Text('Müşteriyi Kaydet'),
+            child: const Text('Müşteriyi Kaydet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1033,11 +1039,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   spacing: 8,
                   children: [
                     if (ord['status'] == 'PENDING')
-                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'ACCEPTED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary), child: const Text('Onayla')),
+                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'ACCEPTED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary), child: const Text('Onayla', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                     if (ord['status'] == 'ACCEPTED')
-                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'PREPARING'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning), child: const Text('Hazırlanıyor')),
+                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'PREPARING'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning), child: const Text('Hazırlanıyor', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                     if (ord['status'] == 'PREPARING')
-                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'DELIVERED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.success), child: const Text('Teslim Edildi')),
+                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'DELIVERED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.success), child: const Text('Teslim Edildi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                     if (ord['status'] != 'DELIVERED' && ord['status'] != 'CANCELLED')
                       TextButton(onPressed: () => _updateOrderStatus(ord['id'], 'CANCELLED'), child: const Text('İptal Et', style: TextStyle(color: AppColors.danger))),
                   ],
