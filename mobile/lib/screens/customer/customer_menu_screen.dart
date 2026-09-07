@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   List<dynamic> _menu = [];
   List<dynamic> _myOrders = [];
   bool _isLoading = false;
+  Timer? _liveTimer;
 
   // Sepet: Liste halinde tutuyoruz. Her eleman: { 'product': item, 'quantity': 1, 'selected_options': 'Sade, Orta vb.' }
   final List<Map<String, dynamic>> _cartList = [];
@@ -30,6 +32,40 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     super.initState();
     _loadMenu();
     _loadMyOrders();
+    // Sipariş durumlarını (Onaylandı, Hazırlanıyor, Teslim Edildi) anlık güncelle
+    _liveTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _loadMyOrdersSilently();
+    });
+  }
+
+  @override
+  void dispose() {
+    _liveTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadMyOrdersSilently() async {
+    if (!mounted) return;
+    final auth = Provider.of<AuthService>(context, listen: false);
+    if (!auth.isAuthenticated || auth.token == null) return;
+
+    try {
+      final res = await http.get(
+        Uri.parse(ApiConfig.customerOrders),
+        headers: {
+          'Authorization': 'Bearer ${auth.token}',
+          'Content-Type': 'application/json'
+        },
+      );
+      if (res.statusCode == 200 && mounted) {
+        final newOrders = jsonDecode(res.body)['data'] ?? [];
+        if (jsonEncode(_myOrders) != jsonEncode(newOrders)) {
+          setState(() {
+            _myOrders = newOrders;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadMenu() async {

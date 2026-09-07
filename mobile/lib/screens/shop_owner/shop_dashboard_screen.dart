@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,15 +23,65 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
   List<dynamic> _customers = [];
   List<dynamic> _announcements = [];
   bool _isLoading = false;
+  Timer? _liveTimer;
 
   @override
   void initState() {
     super.initState();
-    _loadAllData();
+    _loadAllData(showSpinner: true);
+    // Her 2 saniyede bir yeni siparişleri ve duyuruları arkaplanda sessizce güncelle (Anlık / Realtime)
+    _liveTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _fetchLiveDataSilently();
+    });
   }
 
-  Future<void> _loadAllData() async {
-    setState(() => _isLoading = true);
+  @override
+  void dispose() {
+    _liveTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchLiveDataSilently() async {
+    if (!mounted) return;
+    final auth = Provider.of<AuthService>(context, listen: false);
+    if (!auth.isAuthenticated || auth.token == null) return;
+
+    final headers = {
+      'Authorization': 'Bearer ${auth.token}',
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      // 1. Siparişler
+      final ordRes = await http.get(Uri.parse(ApiConfig.shopOrders), headers: headers);
+      if (ordRes.statusCode == 200 && mounted) {
+        final newOrders = jsonDecode(ordRes.body)['data'] ?? [];
+        if (jsonEncode(_orders) != jsonEncode(newOrders)) {
+          setState(() {
+            _orders = newOrders;
+          });
+        }
+      }
+
+      // 2. Duyurular
+      final annRes = await http.get(Uri.parse(ApiConfig.shopAnnouncements), headers: headers);
+      if (annRes.statusCode == 200 && mounted) {
+        final newAnnouncements = jsonDecode(annRes.body)['data'] ?? [];
+        if (jsonEncode(_announcements) != jsonEncode(newAnnouncements)) {
+          setState(() {
+            _announcements = newAnnouncements;
+          });
+        }
+      }
+    } catch (e) {
+      // Sessiz polling hatası
+    }
+  }
+
+  Future<void> _loadAllData({bool showSpinner = false}) async {
+    if (showSpinner) {
+      setState(() => _isLoading = true);
+    }
     final auth = Provider.of<AuthService>(context, listen: false);
     final headers = {
       'Authorization': 'Bearer ${auth.token}',
@@ -44,15 +95,19 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       final custRes = await http.get(Uri.parse(ApiConfig.shopCustomers), headers: headers);
       final annRes = await http.get(Uri.parse(ApiConfig.shopAnnouncements), headers: headers);
 
-      if (ordRes.statusCode == 200) _orders = jsonDecode(ordRes.body)['data'] ?? [];
-      if (prodRes.statusCode == 200) _products = jsonDecode(prodRes.body)['data'] ?? [];
-      if (catRes.statusCode == 200) _categories = jsonDecode(catRes.body)['data'] ?? [];
-      if (custRes.statusCode == 200) _customers = jsonDecode(custRes.body)['data'] ?? [];
-      if (annRes.statusCode == 200) _announcements = jsonDecode(annRes.body)['data'] ?? [];
+      if (mounted) {
+        setState(() {
+          if (ordRes.statusCode == 200) _orders = jsonDecode(ordRes.body)['data'] ?? [];
+          if (prodRes.statusCode == 200) _products = jsonDecode(prodRes.body)['data'] ?? [];
+          if (catRes.statusCode == 200) _categories = jsonDecode(catRes.body)['data'] ?? [];
+          if (custRes.statusCode == 200) _customers = jsonDecode(custRes.body)['data'] ?? [];
+          if (annRes.statusCode == 200) _announcements = jsonDecode(annRes.body)['data'] ?? [];
+        });
+      }
     } catch (e) {
       debugPrint('Veri çekme hatası: $e');
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && showSpinner) setState(() => _isLoading = false);
     }
   }
 
