@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'constants.dart';
 import 'services/auth_service.dart';
+import 'services/app_localizations.dart';
 import 'screens/login_screen.dart';
 import 'screens/shop_owner/shop_dashboard_screen.dart';
 import 'screens/customer/customer_menu_screen.dart';
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Hızlı ve Micro Sipariş',
+      title: 'app_title'.tr,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,

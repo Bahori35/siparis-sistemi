@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
+import '../../services/app_localizations.dart';
 import '../../constants.dart';
 import '../login_screen.dart';
 
@@ -439,13 +440,14 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_shopInfo?['name'] ?? auth.shopName ?? 'Hızlı ve Micro Sipariş', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text('${auth.user?['full_name']} (Müşteri)', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+            Text(_shopInfo?['name'] ?? auth.shopName ?? 'app_title'.tr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text('${auth.user?['full_name']} (${'customer_panel'.tr})', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'refresh'.tr,
             onPressed: () {
               _loadMenu();
               _loadMyOrders();
@@ -453,6 +455,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.danger),
+            tooltip: 'logout'.tr,
             onPressed: () async {
               await auth.logout();
               if (!context.mounted) return;
@@ -472,17 +475,17 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         type: BottomNavigationBarType.fixed,
         onTap: (index) => setState(() => _currentTab = index),
         items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Menü'),
+          BottomNavigationBarItem(icon: const Icon(Icons.restaurant_menu), label: 'tab_menu'.tr),
           BottomNavigationBarItem(
             icon: Badge(
               isLabelVisible: _cartList.isNotEmpty,
               label: Text('${_cartList.length}'),
               child: const Icon(Icons.shopping_cart),
             ),
-            label: 'Sepetim',
+            label: 'tab_cart'.tr,
           ),
-          const BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Hesabım'),
-          const BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Siparişlerim'),
+          BottomNavigationBarItem(icon: const Icon(Icons.account_balance_wallet), label: 'tab_account'.tr),
+          BottomNavigationBarItem(icon: const Icon(Icons.history), label: 'tab_orders'.tr),
         ],
       ),
     );
@@ -500,13 +503,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   // ==========================================
   Widget _buildMenuTab() {
     final bool isAcceptingOrders = _shopInfo?['is_accepting_orders'] == true || _shopInfo?['is_accepting_orders'] == 1;
-    final String closedReason = _shopInfo?['closed_reason'] ?? 'Dükkan şu anda sipariş alımına kapalıdır.';
+    final String closedReason = _shopInfo?['closed_reason'] ?? 'shop_closed_tip'.tr;
     final String openingTime = _shopInfo?['opening_time'] ?? '08:00';
     final String closingTime = _shopInfo?['closing_time'] ?? '22:00';
     final bool autoHours = _shopInfo?['auto_hours_enabled'] == true || _shopInfo?['auto_hours_enabled'] == 1;
 
     if (_menu.isEmpty) {
-      return const Center(child: Text('Dükkanın menüsünde henüz ürün bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
+      return Center(child: Text('no_products'.tr, style: const TextStyle(color: AppColors.textMuted)));
     }
 
     return Column(
@@ -531,7 +534,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   Icon(Icons.access_time_filled, color: isAcceptingOrders ? AppColors.primary : AppColors.textMuted, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    autoHours ? 'Mesai Saatleri: $openingTime - $closingTime' : 'Çalışma Saatleri: $openingTime - $closingTime',
+                    '${'work_hours'.tr}: $openingTime - $closingTime',
                     style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -544,7 +547,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   border: Border.all(color: isAcceptingOrders ? AppColors.success : AppColors.danger, width: 0.8),
                 ),
                 child: Text(
-                  isAcceptingOrders ? 'AÇIK' : 'KAPALI',
+                  isAcceptingOrders ? 'shop_open'.tr : 'shop_closed'.tr,
                   style: TextStyle(
                     color: isAcceptingOrders ? AppColors.success : AppColors.danger,
                     fontSize: 11,
@@ -575,9 +578,9 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'DÜKKAN SİPARİŞE KAPALI',
-                        style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13),
+                      Text(
+                        'shop_closed'.tr,
+                        style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -641,7 +644,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        '${products.length} Çeşit Ürün',
+                        '${products.length} ${'tab_products'.tr}',
                         style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                       ),
                     ),
@@ -729,8 +732,8 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                   icon: Icon(isAcceptingOrders ? (hasOptions ? Icons.tune : Icons.add_shopping_cart) : Icons.lock_outline, size: 18),
                                   label: Text(
                                     !isAcceptingOrders
-                                        ? 'Kapalı'
-                                        : (hasOptions ? 'Seç ve Ekle' : 'Sepete Ekle'),
+                                        ? 'shop_closed'.tr
+                                        : (hasOptions ? 'select_options'.tr : 'add_to_cart'.tr),
                                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                                   ),
                                 ),
@@ -752,8 +755,8 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
 
   Widget _buildCartTab() {
     if (_cartList.isEmpty) {
-      return const Center(
-        child: Text('Sepetiniz boş. Menüden dilediğiniz ürünleri ekleyin!', style: TextStyle(color: AppColors.textMuted)),
+      return Center(
+        child: Text('cart_empty'.tr, style: const TextStyle(color: AppColors.textMuted)),
       );
     }
     return SingleChildScrollView(
@@ -778,10 +781,10 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   children: [
                     if (opts != null && opts.toString().isNotEmpty) ...[
                       const SizedBox(height: 2),
-                      Text('Seçenek: $opts', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                      Text('${'options_label'.tr}: $opts', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600)),
                     ],
                     const SizedBox(height: 2),
-                    Text('Birim Tutar: ₺${p['price']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                    Text('${'total'.tr}: ₺${p['price']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
                   ],
                 ),
                 trailing: IconButton(
@@ -796,7 +799,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             controller: _orderNotesController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Sipariş Notu (Örn: Kat 3 Muhasebe)',
+              labelText: 'order_note'.tr,
               labelStyle: const TextStyle(color: AppColors.textMuted),
               filled: true,
               fillColor: AppColors.cardBg,
@@ -810,7 +813,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Toplam (${_cartList.length} Ürün):', style: const TextStyle(fontSize: 16, color: AppColors.textMuted)),
+                Text('${'total'.tr} (${_cartList.length}):', style: const TextStyle(fontSize: 16, color: AppColors.textMuted)),
                 Text('₺${_cartTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.success)),
               ],
             ),
@@ -819,7 +822,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
           Builder(
             builder: (ctx) {
               final bool isAcceptingOrders = _shopInfo?['is_accepting_orders'] == true || _shopInfo?['is_accepting_orders'] == 1;
-              final String closedReason = _shopInfo?['closed_reason'] ?? 'Dükkan şu anda sipariş alımına kapalıdır.';
+              final String closedReason = _shopInfo?['closed_reason'] ?? 'shop_closed_tip'.tr;
 
               return SizedBox(
                 width: double.infinity,
@@ -840,7 +843,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                           );
                         },
                   child: Text(
-                    isAcceptingOrders ? 'Siparişi Tamamla & Gönder' : 'Dükkan Kapalı (Sipariş Verilemez)',
+                    isAcceptingOrders ? 'confirm_order'.tr : 'shop_closed'.tr,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
@@ -857,7 +860,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   // ==========================================
   Widget _buildAccountTab() {
     if (_myOrders.isEmpty) {
-      return const Center(child: Text('Hesabınıza ait sipariş kaydı bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
+      return Center(child: Text('no_account_records'.tr, style: const TextStyle(color: AppColors.textMuted)));
     }
 
     final now = DateTime.now();
@@ -944,11 +947,11 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.hourglass_top, color: AppColors.warning, size: 14),
-                        SizedBox(width: 4),
-                        Text('Açık Hesap (Borç):', style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
+                        const Icon(Icons.hourglass_top, color: AppColors.warning, size: 14),
+                        const SizedBox(width: 4),
+                        Text('${'unpaid_balance'.tr}:', style: const TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -962,11 +965,11 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.check_circle_outline, color: AppColors.success, size: 14),
-                        SizedBox(width: 4),
-                        Text('Toplam Ödenen:', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                        const Icon(Icons.check_circle_outline, color: AppColors.success, size: 14),
+                        const SizedBox(width: 4),
+                        Text('${'total_paid'.tr}:', style: const TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -988,31 +991,31 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    const Text('Dönem: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text('${'period'.tr}: ', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 4),
                     ChoiceChip(
-                      label: const Text('Tümü'),
+                      label: Text('period_all'.tr),
                       selected: _selectedPeriod == 0,
                       selectedColor: AppColors.primary,
                       onSelected: (v) => setState(() => _selectedPeriod = 0),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('Bugün (Günlük)'),
+                      label: Text('period_daily'.tr),
                       selected: _selectedPeriod == 1,
                       selectedColor: AppColors.primary,
                       onSelected: (v) => setState(() => _selectedPeriod = 1),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('Bu Hafta (7 Gün)'),
+                      label: Text('period_weekly'.tr),
                       selected: _selectedPeriod == 2,
                       selectedColor: AppColors.primary,
                       onSelected: (v) => setState(() => _selectedPeriod = 2),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('Bu Ay (30 Gün)'),
+                      label: Text('period_monthly'.tr),
                       selected: _selectedPeriod == 3,
                       selectedColor: AppColors.primary,
                       onSelected: (v) => setState(() => _selectedPeriod = 3),
@@ -1026,31 +1029,31 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    const Text('Ödeme: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text('${'payment_status'.tr}: ', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 4),
                     ChoiceChip(
-                      label: const Text('Tümü'),
+                      label: Text('pay_all'.tr),
                       selected: _selectedPayFilter == 0,
                       selectedColor: AppColors.accent,
                       onSelected: (v) => setState(() => _selectedPayFilter = 0),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('⏳ Ödenmemişler (Açık)'),
+                      label: Text('pay_unpaid'.tr),
                       selected: _selectedPayFilter == 1,
                       selectedColor: AppColors.warning,
                       onSelected: (v) => setState(() => _selectedPayFilter = 1),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('✅ Ödenenler (Geçmiş)'),
+                      label: Text('pay_paid'.tr),
                       selected: _selectedPayFilter == 2,
                       selectedColor: AppColors.success,
                       onSelected: (v) => setState(() => _selectedPayFilter = 2),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('❌ İptal Edilenler'),
+                      label: Text('pay_cancelled'.tr),
                       selected: _selectedPayFilter == 3,
                       selectedColor: AppColors.danger,
                       onSelected: (v) => setState(() => _selectedPayFilter = 3),
@@ -1067,8 +1070,8 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         // 3. Hesap Sipariş Listesi
         Expanded(
           child: filteredOrders.isEmpty
-              ? const Center(
-                  child: Text('Seçilen filtreye ait hesap kaydı bulunamadı.', style: TextStyle(color: AppColors.textMuted)),
+              ? Center(
+                  child: Text('no_filtered_records'.tr, style: const TextStyle(color: AppColors.textMuted)),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
@@ -1095,7 +1098,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                                Text('${'order_number'.tr} #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                                 Row(
                                   children: [
                                     Container(
@@ -1118,7 +1121,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            isPaid ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                                            isPaid ? 'status_paid'.tr : 'status_unpaid'.tr,
                                             style: TextStyle(
                                               color: isPaid ? AppColors.success : AppColors.warning,
                                               fontSize: 11,
@@ -1134,10 +1137,10 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                               ],
                             ),
                             const SizedBox(height: 6),
-                            Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                            Text('${'date'.tr}: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                             if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
                               const SizedBox(height: 4),
-                              Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                              Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
                             ],
                             const Divider(color: Colors.white12, height: 16),
                             ...items.map((it) {
@@ -1151,7 +1154,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     if (hasOpts) ...[
                                       Padding(
                                         padding: const EdgeInsets.only(left: 12),
-                                        child: Text('Seçenek: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
+                                        child: Text('${'options_label'.tr}: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
                                       ),
                                     ],
                                   ],
@@ -1159,7 +1162,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                               );
                             }),
                             const SizedBox(height: 8),
-                            Text('Toplam Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
+                            Text('${'total_amount'.tr}: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
                           ],
                         ),
                       ),
@@ -1176,7 +1179,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   // ==========================================
   Widget _buildOrdersTab() {
     if (_myOrders.isEmpty) {
-      return const Center(child: Text('Henüz verilmiş bir siparişiniz bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
+      return Center(child: Text('no_orders'.tr, style: const TextStyle(color: AppColors.textMuted)));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -1198,7 +1201,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                    Text('${'order_number'.tr} #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                     Row(
                       children: [
                         Container(
@@ -1212,7 +1215,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                             ),
                           ),
                           child: Text(
-                            isPaid ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                            isPaid ? 'status_paid'.tr : 'status_unpaid'.tr,
                             style: TextStyle(
                               color: isPaid ? AppColors.success : AppColors.warning,
                               fontSize: 11,
@@ -1226,10 +1229,10 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                Text('${'date'.tr}: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                  Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
                 ],
                 const Divider(color: Colors.white12, height: 16),
                 ...items.map((it) {
@@ -1243,7 +1246,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         if (hasOpts) ...[
                           Padding(
                             padding: const EdgeInsets.only(left: 12),
-                            child: Text('Seçenek: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
+                            child: Text('${'options_label'.tr}: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
                           ),
                         ],
                       ],
@@ -1251,7 +1254,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   );
                 }),
                 const SizedBox(height: 8),
-                Text('Toplam Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
+                Text('${'total_amount'.tr}: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
               ],
             ),
           ),
@@ -1264,11 +1267,11 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     Color color;
     String label;
     switch (status) {
-      case 'PENDING': color = AppColors.warning; label = 'Bekliyor'; break;
-      case 'ACCEPTED': color = AppColors.primary; label = 'Onaylandı'; break;
-      case 'PREPARING': color = Colors.orange; label = 'Hazırlanıyor'; break;
-      case 'DELIVERED': color = AppColors.success; label = 'Teslim Edildi'; break;
-      case 'CANCELLED': color = AppColors.danger; label = 'İptal'; break;
+      case 'PENDING': color = AppColors.warning; label = 'status_pending'.tr; break;
+      case 'ACCEPTED': color = AppColors.primary; label = 'status_accepted'.tr; break;
+      case 'PREPARING': color = Colors.orange; label = 'status_preparing'.tr; break;
+      case 'DELIVERED': color = AppColors.success; label = 'status_delivered'.tr; break;
+      case 'CANCELLED': color = AppColors.danger; label = 'status_cancelled'.tr; break;
       default: color = AppColors.textMuted; label = status;
     }
     return Container(

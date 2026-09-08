@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/app_localizations.dart';
 import '../constants.dart';
 import 'shop_owner/shop_dashboard_screen.dart';
 import 'customer/customer_menu_screen.dart';
@@ -41,13 +42,13 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Süper admin hesabı mobil uygulamadan açılamaz. Lütfen Web Panelini kullanın.')),
+          SnackBar(content: Text('super_admin_warn'.tr)),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Giriş başarısız'),
+          content: Text(result['message'] ?? 'login_failed'.tr),
           backgroundColor: AppColors.danger,
         ),
       );
@@ -82,18 +83,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Hızlı ve Micro Sipariş',
-                    style: TextStyle(
+                  Text(
+                    'app_title'.tr,
+                    style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textMain,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'İşletme / Kullanıcı Giriş Paneli',
-                    style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                  Text(
+                    'login_subtitle'.tr,
+                    style: const TextStyle(fontSize: 14, color: AppColors.textMuted),
                   ),
                   const SizedBox(height: 32),
 
@@ -102,14 +103,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _usernameController,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      labelText: 'Kullanıcı Adı',
+                      labelText: 'username'.tr,
                       labelStyle: const TextStyle(color: AppColors.textMuted),
                       prefixIcon: const Icon(Icons.person_outline, color: AppColors.primary),
                       filled: true,
                       fillColor: AppColors.cardBg,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    validator: (v) => v!.isEmpty ? 'Kullanıcı adı giriniz' : null,
+                    validator: (v) => v!.isEmpty ? 'username_required'.tr : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -119,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      labelText: 'Şifre',
+                      labelText: 'password'.tr,
                       labelStyle: const TextStyle(color: AppColors.textMuted),
                       prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
                       suffixIcon: IconButton(
@@ -133,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       fillColor: AppColors.cardBg,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    validator: (v) => v!.isEmpty ? 'Şifre giriniz' : null,
+                    validator: (v) => v!.isEmpty ? 'password_required'.tr : null,
                   ),
                   const SizedBox(height: 28),
 
@@ -149,9 +150,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: authService.isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Giriş Yap',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          : Text(
+                              'login_btn'.tr,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                     ),
                   ),

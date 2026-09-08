@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../../services/auth_service.dart';
+import '../../services/app_localizations.dart';
 import '../../constants.dart';
 import '../login_screen.dart';
 
@@ -1709,8 +1710,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(auth.shopName ?? 'Dükkan Paneli', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text('${auth.user?['full_name']} (Dükkan Sahibi)', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+            Text(auth.shopName ?? 'shop_panel'.tr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text('${auth.user?['full_name']} (${'shop_owner_label'.tr})', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
           ],
         ),
         actions: [
@@ -1719,8 +1720,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Tooltip(
               message: (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true)
-                  ? 'Dükkan Açık (Kapatmak için tıkla)'
-                  : 'Dükkan Kapalı (Açmak için tıkla)',
+                  ? 'shop_open_tip'.tr
+                  : 'shop_closed_tip'.tr,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true)
@@ -1745,7 +1746,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   size: 16,
                 ),
                 label: Text(
-                  (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true) ? 'AÇIK' : 'KAPALI',
+                  (_shopSettings?['is_open'] == 1 || _shopSettings?['is_open'] == true) ? 'shop_open'.tr : 'shop_closed'.tr,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
                 onPressed: _toggleShopOpenStatus,
@@ -1755,17 +1756,17 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           // Mesai Saatleri Ayar Butonu
           IconButton(
             icon: const Icon(Icons.access_time, color: AppColors.accent),
-            tooltip: 'Mesai Saatleri',
+            tooltip: 'work_hours'.tr,
             onPressed: _openWorkHoursDialog,
           ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
-            tooltip: 'Yenile',
+            tooltip: 'refresh'.tr,
             onPressed: _loadAllData,
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.danger),
-            tooltip: 'Çıkış',
+            tooltip: 'logout'.tr,
             onPressed: () async {
               await auth.logout();
               if (!context.mounted) return;
@@ -1784,13 +1785,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         unselectedItemColor: AppColors.textMuted,
         type: BottomNavigationBarType.fixed,
         onTap: (index) => setState(() => _currentTab = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Siparişler'),
-          BottomNavigationBarItem(icon: Icon(Icons.fastfood), label: 'Ürünler'),
-          BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Seçenekler'),
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Kategoriler'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Müşteriler'),
-          BottomNavigationBarItem(icon: Icon(Icons.campaign), label: 'Duyurular'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.receipt_long), label: 'tab_orders'.tr),
+          BottomNavigationBarItem(icon: const Icon(Icons.fastfood), label: 'tab_products'.tr),
+          BottomNavigationBarItem(icon: const Icon(Icons.tune), label: 'tab_options'.tr),
+          BottomNavigationBarItem(icon: const Icon(Icons.category), label: 'tab_categories'.tr),
+          BottomNavigationBarItem(icon: const Icon(Icons.people), label: 'tab_customers'.tr),
+          BottomNavigationBarItem(icon: const Icon(Icons.campaign), label: 'tab_announcements'.tr),
         ],
       ),
       floatingActionButton: _getFab(),
@@ -1804,7 +1805,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         onPressed: () => _openAddProductDialog(),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Ürün Ekle', style: TextStyle(color: Colors.white)),
+        label: Text('add_product'.tr, style: const TextStyle(color: Colors.white)),
       );
     }
     if (_currentTab == 2) {
@@ -1812,7 +1813,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         onPressed: () => _openAddOptionToProductDialog(),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Seçenek Ekle', style: TextStyle(color: Colors.white)),
+        label: Text('add_option'.tr, style: const TextStyle(color: Colors.white)),
       );
     }
     if (_currentTab == 3) {
@@ -1820,7 +1821,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         onPressed: () => _openAddCategoryDialog(),
         backgroundColor: AppColors.accent,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Kategori Ekle', style: TextStyle(color: Colors.white)),
+        label: Text('add_category'.tr, style: const TextStyle(color: Colors.white)),
       );
     }
     if (_currentTab == 4) {
@@ -1828,7 +1829,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         onPressed: _openAddCustomerDialog,
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.person_add, color: Colors.white),
-        label: const Text('Müşteri Ekle', style: TextStyle(color: Colors.white)),
+        label: Text('add_customer'.tr, style: const TextStyle(color: Colors.white)),
       );
     }
     return null;
@@ -1845,7 +1846,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
 
   Widget _buildOrdersTab() {
     if (_orders.isEmpty) {
-      return const Center(child: Text('Henüz gelen bir sipariş yok.', style: TextStyle(color: AppColors.textMuted)));
+      return Center(child: Text('no_orders'.tr, style: const TextStyle(color: AppColors.textMuted)));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -1853,6 +1854,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       itemBuilder: (ctx, i) {
         final ord = _orders[i];
         final items = ord['items'] as List<dynamic>? ?? [];
+        final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
+
         return Card(
           color: AppColors.cardBg,
           margin: const EdgeInsets.only(bottom: 12),
@@ -1865,37 +1868,37 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                    Text('${'order_number'.tr} #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                     Row(
                       children: [
                         // Ödeme Durumu Rozeti & Hızlı Toggle
                         InkWell(
-                          onTap: () => _toggleOrderPaymentStatus(ord['id'], ord['is_paid'] == 1 || ord['is_paid'] == true),
+                          onTap: () => _toggleOrderPaymentStatus(ord['id'], isPaid),
                           child: Container(
                             margin: const EdgeInsets.only(right: 6),
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: (ord['is_paid'] == 1 || ord['is_paid'] == true)
+                              color: isPaid
                                   ? AppColors.success.withOpacity(0.15)
                                   : AppColors.warning.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                                color: isPaid ? AppColors.success : AppColors.warning,
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  (ord['is_paid'] == 1 || ord['is_paid'] == true) ? Icons.check_circle : Icons.hourglass_top,
-                                  color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                                  isPaid ? Icons.check_circle : Icons.hourglass_top,
+                                  color: isPaid ? AppColors.success : AppColors.warning,
                                   size: 13,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  (ord['is_paid'] == 1 || ord['is_paid'] == true) ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                                  isPaid ? 'status_paid'.tr : 'status_unpaid'.tr,
                                   style: TextStyle(
-                                    color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                                    color: isPaid ? AppColors.success : AppColors.warning,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -1910,9 +1913,9 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Müşteri: ${ord['customer_name']} (${ord['customer_phone'] ?? '-'})', style: const TextStyle(color: AppColors.textMuted)),
+                Text('${'customer_panel'.tr}: ${ord['customer_name']} (${ord['customer_phone'] ?? '-'})', style: const TextStyle(color: AppColors.textMuted)),
                 if (ord['notes'] != null && ord['notes'].toString().isNotEmpty)
-                  Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontStyle: FontStyle.italic)),
+                  Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontStyle: FontStyle.italic)),
                 const Divider(color: Colors.white12, height: 20),
                 ...items.map((it) {
                   final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
@@ -1930,7 +1933,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                           Padding(
                             padding: const EdgeInsets.only(left: 12),
                             child: Text(
-                              'Seçenekler: ${it['selected_options']}',
+                              '${'options_label'.tr}: ${it['selected_options']}',
                               style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic),
                             ),
                           ),
@@ -1940,19 +1943,19 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   );
                 }),
                 const SizedBox(height: 8),
-                Text('Toplam: ₺${ord['total_price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+                Text('${'total_amount'.tr}: ₺${ord['total_price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
                   children: [
                     if (ord['status'] == 'PENDING')
-                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'ACCEPTED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary), child: const Text('Onayla', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'ACCEPTED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary), child: Text('status_approved'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                     if (ord['status'] == 'ACCEPTED')
-                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'PREPARING'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning), child: const Text('Hazırlanıyor', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'PREPARING'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning), child: Text('status_preparing'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                     if (ord['status'] == 'PREPARING')
-                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'DELIVERED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.success), child: const Text('Teslim Edildi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                      ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'DELIVERED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.success), child: Text('status_delivered'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                     if (ord['status'] != 'DELIVERED' && ord['status'] != 'CANCELLED')
-                      TextButton(onPressed: () => _updateOrderStatus(ord['id'], 'CANCELLED'), child: const Text('İptal Et', style: TextStyle(color: AppColors.danger))),
+                      TextButton(onPressed: () => _updateOrderStatus(ord['id'], 'CANCELLED'), child: Text('status_cancel'.tr, style: const TextStyle(color: AppColors.danger))),
                   ],
                 )
               ],
@@ -2364,11 +2367,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     Color color;
     String label;
     switch (status) {
-      case 'PENDING': color = AppColors.warning; label = 'Bekliyor'; break;
-      case 'ACCEPTED': color = AppColors.primary; label = 'Onaylandı'; break;
-      case 'PREPARING': color = Colors.orange; label = 'Hazırlanıyor'; break;
-      case 'DELIVERED': color = AppColors.success; label = 'Teslim Edildi'; break;
-      case 'CANCELLED': color = AppColors.danger; label = 'İptal'; break;
+      case 'PENDING': color = AppColors.warning; label = 'status_pending'.tr; break;
+      case 'ACCEPTED': color = AppColors.primary; label = 'status_accepted'.tr; break;
+      case 'PREPARING': color = Colors.orange; label = 'status_preparing'.tr; break;
+      case 'DELIVERED': color = AppColors.success; label = 'status_delivered'.tr; break;
+      case 'CANCELLED': color = AppColors.danger; label = 'status_cancelled'.tr; break;
       default: color = AppColors.textMuted; label = status;
     }
     return Container(
