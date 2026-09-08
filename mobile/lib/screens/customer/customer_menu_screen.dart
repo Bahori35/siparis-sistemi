@@ -865,8 +865,18 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     // Filtreleme mantığı
     final filteredOrders = _myOrders.where((ord) {
       final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
-      if (_selectedPayFilter == 1 && isPaid) return false;
-      if (_selectedPayFilter == 2 && !isPaid) return false;
+      final isCancelled = (ord['status'] == 'CANCELLED');
+
+      if (_selectedPayFilter == 1) {
+        // Açık Hesap / Ödenmemiş (İptal edilenler hariç)
+        if (isPaid || isCancelled) return false;
+      } else if (_selectedPayFilter == 2) {
+        // Ödenenler (Geçmiş) (İptal edilenler hariç)
+        if (!isPaid || isCancelled) return false;
+      } else if (_selectedPayFilter == 3) {
+        // Sadece İptal Edilenler
+        if (!isCancelled) return false;
+      }
 
       if (_selectedPeriod > 0) {
         DateTime? orderDate = DateTime.tryParse(ord['created_at'] ?? '');
@@ -893,9 +903,11 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     }).toList();
 
     // Müşterinin Toplam Açık Hesap (Ödenmemiş Borcu) ve Toplam Ödediği Tutarı Hesapla
+    // İPTAL EDİLMİŞ (CANCELLED) siparişler borca dahil edilmez!
     double unpaidTotal = 0;
     double paidTotal = 0;
     for (var o in _myOrders) {
+      if (o['status'] == 'CANCELLED') continue; // İptal edilen sipariş borç veya ödenen tutara katılmaz
       final amt = double.tryParse(o['total_price']?.toString() ?? '0') ?? 0;
       final isPaid = (o['is_paid'] == 1 || o['is_paid'] == true);
       if (isPaid) {
@@ -1035,6 +1047,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                       selected: _selectedPayFilter == 2,
                       selectedColor: AppColors.success,
                       onSelected: (v) => setState(() => _selectedPayFilter = 2),
+                    ),
+                    const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: const Text('❌ İptal Edilenler'),
+                      selected: _selectedPayFilter == 3,
+                      selectedColor: AppColors.danger,
+                      onSelected: (v) => setState(() => _selectedPayFilter = 3),
                     ),
                   ],
                 ),

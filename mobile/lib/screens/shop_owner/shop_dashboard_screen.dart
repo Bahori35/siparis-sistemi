@@ -1231,8 +1231,15 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
 
           final filteredOrders = customerOrders.where((ord) {
             final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
-            if (selectedPayFilter == 1 && isPaid) return false;
-            if (selectedPayFilter == 2 && !isPaid) return false;
+            final isCancelled = (ord['status'] == 'CANCELLED');
+
+            if (selectedPayFilter == 1) {
+              if (isPaid || isCancelled) return false;
+            } else if (selectedPayFilter == 2) {
+              if (!isPaid || isCancelled) return false;
+            } else if (selectedPayFilter == 3) {
+              if (!isCancelled) return false;
+            }
 
             if (selectedPeriod > 0) {
               DateTime? orderDate = DateTime.tryParse(ord['created_at'] ?? '');
@@ -1259,9 +1266,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           }).toList();
 
           // Toplam Borç (Ödenmemişler) ve Toplam Ödenen Tutar Hesapla
+          // İptal edilen siparişler borca veya ödenen tutara dahil edilmez!
           double unpaidTotal = 0;
           double paidTotal = 0;
           for (var o in customerOrders) {
+            if (o['status'] == 'CANCELLED') continue;
             final amt = double.tryParse(o['total_price']?.toString() ?? '0') ?? 0;
             final isPaid = (o['is_paid'] == 1 || o['is_paid'] == true);
             if (isPaid) {
@@ -1419,6 +1428,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         selected: selectedPayFilter == 2,
                         selectedColor: AppColors.success,
                         onSelected: (v) => setModalState(() => selectedPayFilter = 2),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('❌ İptal Edilenler'),
+                        selected: selectedPayFilter == 3,
+                        selectedColor: AppColors.danger,
+                        onSelected: (v) => setModalState(() => selectedPayFilter = 3),
                       ),
                     ],
                   ),
@@ -2164,13 +2180,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         final c = _customers[i];
         final customerId = c['id'];
 
-        // Bu müşterinin bekleyen ödenmemiş toplam borcunu hesapla
+        // Bu müşterinin bekleyen ödenmemiş toplam borcunu hesapla (İptal edilenler hariç)
         double unpaidTotal = 0;
         int orderCount = 0;
         for (var o in _orders) {
           if (o['customer_id'] == customerId) {
             orderCount++;
-            if (o['is_paid'] != 1 && o['is_paid'] != true) {
+            if (o['status'] != 'CANCELLED' && o['is_paid'] != 1 && o['is_paid'] != true) {
               unpaidTotal += double.tryParse(o['total_price']?.toString() ?? '0') ?? 0;
             }
           }
