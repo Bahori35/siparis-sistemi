@@ -21,7 +21,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     // Müşterinin kendi sipariş geçmişini getir
-    $stmt = $db->prepare("SELECT o.id, o.shop_id, o.total_price, o.status, o.notes, o.created_at,
+    $stmt = $db->prepare("SELECT o.id, o.shop_id, o.total_price, o.status, o.is_paid, o.paid_at, o.notes, o.created_at,
                                  s.name as shop_name
                           FROM orders o
                           LEFT JOIN shops s ON o.shop_id = s.id

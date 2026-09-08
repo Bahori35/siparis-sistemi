@@ -21,8 +21,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     // Dükkana gelen siparişleri kalemleriyle birlikte çek
     $status = $_GET['status'] ?? null;
+    $isPaid = isset($_GET['is_paid']) ? (int)$_GET['is_paid'] : null;
+    $customerId = isset($_GET['customer_id']) ? (int)$_GET['customer_id'] : null;
+    $period = $_GET['period'] ?? null; // 'daily', 'weekly', 'monthly'
     
-    $query = "SELECT o.id, o.shop_id, o.customer_id, o.total_price, o.status, o.notes, o.created_at,
+    $query = "SELECT o.id, o.shop_id, o.customer_id, o.total_price, o.status, o.is_paid, o.paid_at, o.notes, o.created_at,
                      u.full_name as customer_name, u.phone as customer_phone
               FROM orders o
               LEFT JOIN users u ON o.customer_id = u.id
@@ -32,6 +35,24 @@ if ($method === 'GET') {
     if (!empty($status)) {
         $query .= " AND o.status = :status";
         $params[':status'] = $status;
+    }
+
+    if ($isPaid !== null) {
+        $query .= " AND o.is_paid = :is_paid";
+        $params[':is_paid'] = $isPaid;
+    }
+
+    if ($customerId !== null && $customerId > 0) {
+        $query .= " AND o.customer_id = :customer_id";
+        $params[':customer_id'] = $customerId;
+    }
+
+    if ($period === 'daily') {
+        $query .= " AND DATE(o.created_at) = CURDATE()";
+    } elseif ($period === 'weekly') {
+        $query .= " AND o.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+    } elseif ($period === 'monthly') {
+        $query .= " AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
     }
 
     $query .= " ORDER BY o.id DESC";
@@ -54,27 +75,71 @@ if ($method === 'GET') {
 }
 
 if ($method === 'PUT') {
-    // Sipariş durumu güncelle (PENDING, ACCEPTED, PREPARING, DELIVERED, CANCELLED)
+    // Sipariş durumu veya Ödeme durumu güncelleme
     $body = Request::getJsonBody();
     $orderId = (int)($body['order_id'] ?? 0);
-    $newStatus = trim($body['status'] ?? '');
+    $newStatus = isset($body['status']) ? trim((string)$body['status']) : null;
+    $isPaid = isset($body['is_paid']) ? (int)$body['is_paid'] : null;
 
-    $validStatuses = ['PENDING', 'ACCEPTED', 'PREPARING', 'DELIVERED', 'CANCELLED'];
-    if ($orderId <= 0 || !in_array($newStatus, $validStatuses, true)) {
-        Response::error('Geçerli bir Sipariş ID ve durum belirtilmelidir.', 422);
+    // Toplu müşteri ödemesi (Örn: Bir müşterinin tüm borcunu tek seferde kapatma)
+    $bulkCustomerPayment = isset($body['bulk_customer_id']) ? (int)$body['bulk_customer_id'] : null;
+
+    if ($bulkCustomerPayment !== null && $bulkCustomerPayment > 0 && $isPaid !== null) {
+        $paidAt = $isPaid === 1 ? date('Y-m-d H:i:s') : null;
+        $bulkStmt = $db->prepare("UPDATE orders SET is_paid = :is_paid, paid_at = :paid_at WHERE customer_id = :cust_id AND shop_id = :shop_id");
+        $bulkStmt->execute([
+            ':is_paid' => $isPaid,
+            ':paid_at' => $paidAt,
+            ':cust_id' => $bulkCustomerPayment,
+            ':shop_id' => $shopId
+        ]);
+        Response::success(null, 'Müşterinin tüm sipariş ödemeleri güncellendi.');
+    }
+
+    if ($orderId <= 0) {
+        Response::error('Geçerli bir Sipariş ID belirtilmelidir.', 422);
     }
 
     // Tenant doğrulaması
-    $check = $db->prepare("SELECT id FROM orders WHERE id = :id AND shop_id = :shop_id");
+    $check = $db->prepare("SELECT id, is_paid FROM orders WHERE id = :id AND shop_id = :shop_id");
     $check->execute([':id' => $orderId, ':shop_id' => $shopId]);
-    if (!$check->fetch()) {
+    $currentOrder = $check->fetch();
+    if (!$currentOrder) {
         Response::notFound('Sipariş bulunamadı veya bu dükkana ait değil.');
     }
 
-    $stmt = $db->prepare("UPDATE orders SET status = :status WHERE id = :id AND shop_id = :shop_id");
-    $stmt->execute([':status' => $newStatus, ':id' => $orderId, ':shop_id' => $shopId]);
+    $updates = [];
+    $params = [':id' => $orderId, ':shop_id' => $shopId];
 
-    Response::success(['order_id' => $orderId, 'status' => $newStatus], 'Sipariş durumu güncellendi.');
+    if ($newStatus !== null && $newStatus !== '') {
+        $validStatuses = ['PENDING', 'ACCEPTED', 'PREPARING', 'DELIVERED', 'CANCELLED'];
+        if (!in_array($newStatus, $validStatuses, true)) {
+            Response::error('Geçersiz sipariş durumu.', 422);
+        }
+        $updates[] = 'status = :status';
+        $params[':status'] = $newStatus;
+    }
+
+    if ($isPaid !== null) {
+        $updates[] = 'is_paid = :is_paid';
+        $params[':is_paid'] = $isPaid;
+
+        if ($isPaid === 1) {
+            $updates[] = 'paid_at = NOW()';
+        } else {
+            $updates[] = 'paid_at = NULL';
+        }
+    }
+
+    if (empty($updates)) {
+        Response::error('Güncellenecek bir durum belirtilmedi.', 422);
+    }
+
+    $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = :id AND shop_id = :shop_id";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+
+    Response::success(['order_id' => $orderId, 'status' => $newStatus, 'is_paid' => $isPaid], 'Sipariş başarıyla güncellendi.');
 }
 
 Response::error('Desteklenmeyen istek yöntemi.', 405);

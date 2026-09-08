@@ -870,7 +870,32 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-                    _buildStatusChip(ord['status']),
+                    Row(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: (ord['is_paid'] == 1 || ord['is_paid'] == true)
+                                ? AppColors.success.withOpacity(0.15)
+                                : AppColors.warning.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                            ),
+                          ),
+                          child: Text(
+                            (ord['is_paid'] == 1 || ord['is_paid'] == true) ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                            style: TextStyle(
+                              color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        _buildStatusChip(ord['status']),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),

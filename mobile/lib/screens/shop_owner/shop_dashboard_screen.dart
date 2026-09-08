@@ -1131,6 +1131,397 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     }
   }
 
+  // Siparişin Ödeme Durumunu Değiştir (Ödendi / Ödenmedi)
+  Future<void> _toggleOrderPaymentStatus(int orderId, bool currentIsPaid) async {
+    final nextPaid = !currentIsPaid;
+    final auth = Provider.of<AuthService>(context, listen: false);
+    try {
+      final res = await http.put(
+        Uri.parse(ApiConfig.shopOrders),
+        headers: {
+          'Authorization': 'Bearer ${auth.token}',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({'order_id': orderId, 'is_paid': nextPaid ? 1 : 0}),
+      );
+      if (res.statusCode == 200) {
+        _loadAllData();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(nextPaid ? '✅ Sipariş ÖDENDİ olarak işaretlendi.' : '⏳ Sipariş ÖDENMEDİ (Açık Hesap) olarak işaretlendi.'),
+            backgroundColor: nextPaid ? AppColors.success : AppColors.warning,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Ödeme durumu güncelleme hatası: $e');
+    }
+  }
+
+  // Bir müşterinin tüm açık hesap borçlarını tek tıkla "Ödendi" yapma
+  Future<void> _markCustomerAllPaid(int customerId, String customerName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: const Text('Tüm Hesabı Kapat', style: TextStyle(color: Colors.white)),
+        content: Text(
+          '"$customerName" adlı müşterinin bekleyen TÜM ödenmemiş siparişlerini ÖDENDİ olarak kapatmak istiyor musunuz?',
+          style: const TextStyle(color: AppColors.textMuted),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Evet, Hesabı Kapat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      try {
+        final res = await http.put(
+          Uri.parse(ApiConfig.shopOrders),
+          headers: {
+            'Authorization': 'Bearer ${auth.token}',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({'bulk_customer_id': customerId, 'is_paid': 1}),
+        );
+        if (res.statusCode == 200) {
+          _loadAllData();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('"$customerName" adlı müşterinin tüm açık hesapları başarıyla kapatıldı!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Toplu ödeme hatası: $e');
+      }
+    }
+  }
+
+  // Müşterinin Ayrıntılı Sipariş & Hesap Geçmişi Penceresi (Günlük / Haftalık / Aylık & Ödendi / Ödenmedi)
+  void _openCustomerOrderHistoryDialog(Map<String, dynamic> customer) {
+    int selectedPeriod = 0; // 0: Tümü, 1: Bugün (Günlük), 2: Son 7 Gün (Haftalık), 3: Son 30 Gün (Aylık)
+    int selectedPayFilter = 0; // 0: Tümü, 1: Ödenmemişler (Açık Hesap), 2: Ödenenler (Kapatılanlar)
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final customerId = customer['id'];
+          final now = DateTime.now();
+
+          // Müşteriye ait siparişleri filtrele
+          final customerOrders = _orders.where((o) => o['customer_id'] == customerId).toList();
+
+          final filteredOrders = customerOrders.where((ord) {
+            final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
+            if (selectedPayFilter == 1 && isPaid) return false;
+            if (selectedPayFilter == 2 && !isPaid) return false;
+
+            if (selectedPeriod > 0) {
+              DateTime? orderDate = DateTime.tryParse(ord['created_at'] ?? '');
+              if (orderDate != null) {
+                if (selectedPeriod == 1) {
+                  // Günlük
+                  if (orderDate.year != now.year || orderDate.month != now.month || orderDate.day != now.day) {
+                    return false;
+                  }
+                } else if (selectedPeriod == 2) {
+                  // Haftalık
+                  if (now.difference(orderDate).inDays > 7) {
+                    return false;
+                  }
+                } else if (selectedPeriod == 3) {
+                  // Aylık
+                  if (now.difference(orderDate).inDays > 30) {
+                    return false;
+                  }
+                }
+              }
+            }
+            return true;
+          }).toList();
+
+          // Toplam Borç (Ödenmemişler) ve Toplam Ödenen Tutar Hesapla
+          double unpaidTotal = 0;
+          double paidTotal = 0;
+          for (var o in customerOrders) {
+            final amt = double.tryParse(o['total_price']?.toString() ?? '0') ?? 0;
+            final isPaid = (o['is_paid'] == 1 || o['is_paid'] == true);
+            if (isPaid) {
+              paidTotal += amt;
+            } else {
+              unpaidTotal += amt;
+            }
+          }
+
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.88,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Başlık & Kapatma Butonu
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            customer['full_name'] ?? 'Müşteri Siparişleri',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          Text(
+                            'Kullanıcı: @${customer['username']} • Tel: ${customer['phone'] ?? '-'}',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppColors.textMuted),
+                      onPressed: () => Navigator.pop(ctx),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Hesap Özeti Kartı (Ödenmemiş Borç & Ödenen Tutar)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.background.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Açık Hesap (Ödenmemiş):', style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('₺${unpaidTotal.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.warning, fontSize: 18, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                      Container(height: 35, width: 1, color: Colors.white12),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Toplam Ödenen:', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('₺${paidTotal.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.success, fontSize: 18, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                      if (unpaidTotal > 0)
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.success,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            await _markCustomerAllPaid(customerId, customer['full_name']);
+                          },
+                          child: const Text('Hesabı Kapat', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 1. ZAMAN FİLTRESİ (Tümü / Günlük / Haftalık / Aylık)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const Text('Dönem: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 4),
+                      ChoiceChip(
+                        label: const Text('Tüm Zamanlar'),
+                        selected: selectedPeriod == 0,
+                        selectedColor: AppColors.primary,
+                        onSelected: (v) => setModalState(() => selectedPeriod = 0),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('Bugün (Günlük)'),
+                        selected: selectedPeriod == 1,
+                        selectedColor: AppColors.primary,
+                        onSelected: (v) => setModalState(() => selectedPeriod = 1),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('Bu Hafta (7 Gün)'),
+                        selected: selectedPeriod == 2,
+                        selectedColor: AppColors.primary,
+                        onSelected: (v) => setModalState(() => selectedPeriod = 2),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('Bu Ay (30 Gün)'),
+                        selected: selectedPeriod == 3,
+                        selectedColor: AppColors.primary,
+                        onSelected: (v) => setModalState(() => selectedPeriod = 3),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // 2. ÖDEME DURUMU FİLTRESİ (Tümü / Ödenmemişler / Ödenenler)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const Text('Ödeme: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 4),
+                      ChoiceChip(
+                        label: const Text('Tümü'),
+                        selected: selectedPayFilter == 0,
+                        selectedColor: AppColors.accent,
+                        onSelected: (v) => setModalState(() => selectedPayFilter = 0),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('⏳ Ödenmemişler (Açık)'),
+                        selected: selectedPayFilter == 1,
+                        selectedColor: AppColors.warning,
+                        onSelected: (v) => setModalState(() => selectedPayFilter = 1),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('✅ Ödenenler (Geçmiş)'),
+                        selected: selectedPayFilter == 2,
+                        selectedColor: AppColors.success,
+                        onSelected: (v) => setModalState(() => selectedPayFilter = 2),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Divider(color: Colors.white12),
+
+                // SİPARİŞ LİSTESİ
+                Expanded(
+                  child: filteredOrders.isEmpty
+                      ? const Center(
+                          child: Text('Seçilen filtreye uygun sipariş kaydı bulunamadı.', style: TextStyle(color: AppColors.textMuted)),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredOrders.length,
+                          itemBuilder: (ctx, idx) {
+                            final ord = filteredOrders[idx];
+                            final items = ord['items'] as List<dynamic>? ?? [];
+                            final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
+
+                            return Card(
+                              color: AppColors.background.withOpacity(0.9),
+                              margin: const EdgeInsets.only(bottom: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: isPaid ? AppColors.success.withOpacity(0.3) : AppColors.warning.withOpacity(0.4),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
+                                        // Ödeme Durumu Rozeti & Toggle Butonu
+                                        InkWell(
+                                          onTap: () async {
+                                            await _toggleOrderPaymentStatus(ord['id'], isPaid);
+                                            setModalState(() {});
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: isPaid ? AppColors.success.withOpacity(0.15) : AppColors.warning.withOpacity(0.15),
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: isPaid ? AppColors.success : AppColors.warning),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(isPaid ? Icons.check_circle : Icons.hourglass_top, color: isPaid ? AppColors.success : AppColors.warning, size: 14),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  isPaid ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                                                  style: TextStyle(color: isPaid ? AppColors.success : AppColors.warning, fontSize: 11, fontWeight: FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                                    if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                                    ],
+                                    const Divider(color: Colors.white10, height: 12),
+                                    ...items.map((it) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 2),
+                                          child: Text(
+                                            '• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']}) ${it['selected_options'] != null ? "[${it['selected_options']}]" : ""}',
+                                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                          ),
+                                        )),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.success)),
+                                        _buildStatusChip(ord['status']),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _openAddCustomerDialog({Map<String, dynamic>? editCustomer}) {
     final isEditing = editCustomer != null;
     final userCtrl = TextEditingController(text: editCustomer?['username'] ?? '');
@@ -1459,7 +1850,47 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-                    _buildStatusChip(ord['status']),
+                    Row(
+                      children: [
+                        // Ödeme Durumu Rozeti & Hızlı Toggle
+                        InkWell(
+                          onTap: () => _toggleOrderPaymentStatus(ord['id'], ord['is_paid'] == 1 || ord['is_paid'] == true),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: (ord['is_paid'] == 1 || ord['is_paid'] == true)
+                                  ? AppColors.success.withOpacity(0.15)
+                                  : AppColors.warning.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  (ord['is_paid'] == 1 || ord['is_paid'] == true) ? Icons.check_circle : Icons.hourglass_top,
+                                  color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                                  size: 13,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  (ord['is_paid'] == 1 || ord['is_paid'] == true) ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                                  style: TextStyle(
+                                    color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        _buildStatusChip(ord['status']),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1731,23 +2162,91 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       itemCount: _customers.length,
       itemBuilder: (ctx, i) {
         final c = _customers[i];
+        final customerId = c['id'];
+
+        // Bu müşterinin bekleyen ödenmemiş toplam borcunu hesapla
+        double unpaidTotal = 0;
+        int orderCount = 0;
+        for (var o in _orders) {
+          if (o['customer_id'] == customerId) {
+            orderCount++;
+            if (o['is_paid'] != 1 && o['is_paid'] != true) {
+              unpaidTotal += double.tryParse(o['total_price']?.toString() ?? '0') ?? 0;
+            }
+          }
+        }
+
         return Card(
           color: AppColors.cardBg,
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ListTile(
-            leading: const CircleAvatar(backgroundColor: AppColors.primary, child: Icon(Icons.person, color: Colors.white)),
-            title: Text(c['full_name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            subtitle: Text('Kullanıcı Adı: @${c['username']} • Tel: ${c['phone'] ?? '-'}', style: const TextStyle(color: AppColors.textMuted)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(
+              color: unpaidTotal > 0 ? AppColors.warning.withOpacity(0.4) : Colors.white10,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.primary, size: 20),
-                  onPressed: () => _openAddCustomerDialog(editCustomer: c),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: unpaidTotal > 0 ? AppColors.warning.withOpacity(0.2) : AppColors.primary.withOpacity(0.2),
+                      child: Icon(Icons.person, color: unpaidTotal > 0 ? AppColors.warning : AppColors.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(c['full_name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          const SizedBox(height: 2),
+                          Text('Kullanıcı: @${c['username']} • Tel: ${c['phone'] ?? '-'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: AppColors.primary, size: 20),
+                      tooltip: 'Düzenle',
+                      onPressed: () => _openAddCustomerDialog(editCustomer: c),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
+                      tooltip: 'Sil',
+                      onPressed: () => _deleteCustomer(c['id'], c['full_name']),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
-                  onPressed: () => _deleteCustomer(c['id'], c['full_name']),
+                const Divider(color: Colors.white10, height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          unpaidTotal > 0 ? 'Açık Hesap (Borç): ₺${unpaidTotal.toStringAsFixed(2)}' : 'Açık Hesap: ₺0.00 (Borç Yok)',
+                          style: TextStyle(
+                            color: unpaidTotal > 0 ? AppColors.warning : AppColors.success,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text('$orderCount Toplam Sipariş', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.receipt_long, size: 16, color: Colors.white),
+                      label: const Text('Hesap & Siparişler', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                      onPressed: () => _openCustomerOrderHistoryDialog(c),
+                    ),
+                  ],
                 ),
               ],
             ),

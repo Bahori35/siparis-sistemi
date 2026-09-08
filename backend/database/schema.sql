@@ -111,6 +111,8 @@ CREATE TABLE orders (
     customer_id INT UNSIGNED NOT NULL COMMENT 'Siparişi veren müşteri (users tablosu)',
     total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT 'Toplam Tutar',
     status ENUM('PENDING', 'ACCEPTED', 'PREPARING', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'PENDING' COMMENT 'Sipariş Durumu',
+    is_paid TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0: Ödenmedi (Açık Hesap / Borç), 1: Ödendi (Kapatıldı)',
+    paid_at DATETIME NULL DEFAULT NULL COMMENT 'Hesabın / Siparişin ödendiği tarih',
     notes TEXT NULL COMMENT 'Müşteri Sipariş Notu',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -124,7 +126,8 @@ CREATE TABLE orders (
         ON DELETE CASCADE ON UPDATE CASCADE,
         
     INDEX idx_orders_shop_status_date (shop_id, status, created_at),
-    INDEX idx_orders_customer (customer_id, created_at)
+    INDEX idx_orders_customer (customer_id, created_at),
+    INDEX idx_orders_payment (shop_id, customer_id, is_paid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------
