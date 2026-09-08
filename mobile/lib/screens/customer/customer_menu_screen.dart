@@ -203,7 +203,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Adet Belirleyin:', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                        Text('select_quantity'.tr, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                         Row(
                           children: [
                             IconButton(
@@ -226,7 +226,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     final newIndex = quantity;
                                     unitSelections[newIndex] = {};
                                     for (var g in optionsData) {
-                                      final title = g['title'] ?? 'Seçenek';
+                                      final title = g['title'] ?? 'options_label'.tr;
                                       unitSelections[newIndex]![title] = [];
                                     }
                                     quantity++;
@@ -243,7 +243,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   // SEÇENEKLER (1. ÜRÜN, 2. ÜRÜN, 3. ÜRÜN AYRI AYRI)
                   if (optionsData.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    const Text('Seçenekleri Belirleyin (İstediğiniz kadar seçebilirsiniz):', style: TextStyle(color: AppColors.accent, fontSize: 15, fontWeight: FontWeight.bold)),
+                    Text('select_options'.tr, style: const TextStyle(color: AppColors.accent, fontSize: 15, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
 
                     ...List.generate(quantity, (index) {
@@ -259,12 +259,12 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              quantity > 1 ? '${index + 1}. ${product['name']} Seçenekleri:' : 'Seçimleriniz:',
+                              quantity > 1 ? '${index + 1}. ${product['name']} ${'order_options_for_unit'.tr}' : 'your_choices'.tr,
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                             const SizedBox(height: 8),
                             ...optionsData.map((g) {
-                              final groupTitle = g['title'] ?? 'Seçenek';
+                              final groupTitle = g['title'] ?? 'options_label'.tr;
                               final items = (g['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
                               final selectedList = unitSelections[index]?[groupTitle] ?? [];
 
@@ -347,7 +347,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('$quantity adet ${product['name']} sepete eklendi.'),
+                            content: Text('$quantity ${'quantity_added_to_cart'.tr}'),
                             backgroundColor: AppColors.success,
                             duration: const Duration(seconds: 2),
                           ),
@@ -355,7 +355,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                       },
                       icon: const Icon(Icons.shopping_cart_checkout, color: Colors.white),
                       label: Text(
-                        'Sepete Ekle (₺${((product['price'] as num) * quantity).toStringAsFixed(2)})',
+                        '${'add_to_cart'.tr} (₺${((product['price'] as num) * quantity).toStringAsFixed(2)})',
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
@@ -415,11 +415,11 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         });
         _loadMyOrders();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Siparişiniz dükkana iletildi! Afiyet olsun.'), backgroundColor: AppColors.success),
+          SnackBar(content: Text('order_sent_success'.tr), backgroundColor: AppColors.success),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Sipariş verilemedi.'), backgroundColor: AppColors.danger),
+          SnackBar(content: Text(data['message'] ?? 'order_send_failed'.tr), backgroundColor: AppColors.danger),
         );
       }
     } catch (e) {

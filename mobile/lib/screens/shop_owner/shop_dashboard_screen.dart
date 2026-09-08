@@ -152,9 +152,9 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Dükkanı kapattığınızda müşteriler ürün ekleyemez ve sipariş veremez.',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              Text(
+                'close_shop_dialog_desc'.tr,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
               ),
               const SizedBox(height: 14),
               TextField(
@@ -162,8 +162,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 style: const TextStyle(color: Colors.white),
                 maxLines: 2,
                 decoration: const InputDecoration(
-                  labelText: 'Kapanma Sebebi / Müşteri Notu',
-                  hintText: 'Örn: Yoğunluk sebebiyle 1 saat kapalıyız / Özel durum',
+                  labelText: 'close_shop_reason_label'.tr,
+                  hintText: 'close_shop_reason_hint'.tr,
                   labelStyle: TextStyle(color: AppColors.textMuted),
                   hintStyle: TextStyle(color: Colors.white24, fontSize: 12),
                 ),
@@ -173,7 +173,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Vazgeç', style: TextStyle(color: AppColors.textMuted)),
+              child: Text('cancel_btn'.tr, style: const TextStyle(color: AppColors.textMuted)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -181,7 +181,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Dükkanı Kapat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text('close_shop_confirm_btn'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -217,7 +217,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(nextStatus ? '🟢 Dükkan sipariş alımına AÇILDI.' : '🔴 Dükkan sipariş alımına KAPATILDI.'),
+            content: Text(nextStatus ? 'shop_opened_snack'.tr : 'shop_closed_snack'.tr),
             backgroundColor: nextStatus ? AppColors.success : AppColors.danger,
           ),
         );
@@ -267,8 +267,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 activeColor: AppColors.primary,
-                title: const Text('Mesai Saatlerini Uygula', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                subtitle: const Text('Aktifken müşteriler sadece bu saatler içinde sipariş verebilir.', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                title: Text('apply_work_hours'.tr, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                subtitle: Text('apply_work_hours_desc'.tr, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                 value: autoHours,
                 onChanged: (val) {
                   setDialogState(() => autoHours = val);
@@ -279,7 +279,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Açılış Saati:', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  Text('${'opening_time'.tr}:', style: const TextStyle(color: Colors.white, fontSize: 14)),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
@@ -304,7 +304,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Kapanış Saati:', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  Text('${'closing_time'.tr}:', style: const TextStyle(color: Colors.white, fontSize: 14)),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
@@ -363,7 +363,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   if (!context.mounted) return;
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Mesai saatleri başarıyla kaydedildi.'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text('work_hours_saved_success'.tr), backgroundColor: AppColors.success),
                   );
                 }
               },
@@ -387,7 +387,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
-        title: Text(isEditing ? 'Kategori Düzenle' : 'Yeni Kategori Ekle', style: const TextStyle(color: Colors.white)),
+        title: Text(isEditing ? 'edit_category'.tr : 'add_category'.tr, style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -395,7 +395,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               controller: nameCtrl,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                labelText: 'Kategori Adı (Örn: Çorbalar, Tatlılar)',
+                labelText: 'category_name_hint'.tr,
                 labelStyle: TextStyle(color: AppColors.textMuted),
               ),
             ),
@@ -405,14 +405,14 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                labelText: 'Sıralama Sırası (0, 1, 2...)',
+                labelText: 'category_order_label'.tr,
                 labelStyle: TextStyle(color: AppColors.textMuted),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('cancel_btn'.tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
@@ -453,7 +453,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               _loadAllData();
             },
             child: Text(
-              isEditing ? 'Güncelle' : 'Kaydet',
+              isEditing ? 'update_btn'.tr : 'save_btn'.tr,
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
@@ -467,17 +467,17 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
-        title: const Text('Kategoriyi Sil', style: TextStyle(color: Colors.white)),
+        title: Text('delete_category_title'.tr, style: const TextStyle(color: Colors.white)),
         content: Text(
-          '"$categoryName" kategorisini ve bu kategoriye bağlı tüm ürünleri silmek istediğinize emin misiniz?',
+          '"$categoryName" ${'delete_category_confirm'.tr}',
           style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cancel_btn'.tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Evet, Sil'),
+            child: Text('yes_delete'.tr),
           ),
         ],
       ),
@@ -506,7 +506,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
   void _openAddOptionToProductDialog({Map<String, dynamic>? preselectedProduct}) {
     if (_products.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen önce menüye en az 1 ürün ekleyin!')),
+        SnackBar(content: Text('add_first_product_warn'.tr)),
       );
       return;
     }
@@ -560,7 +560,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 1. Ürün Seçimi
-                    const Text('1. Seçenek Eklenecek Ürün:', style: TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('select_product_option_step'.tr, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<int>(
                       value: selectedProductId,
@@ -591,7 +591,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                     const Divider(color: Colors.white12),
 
                     // 2. Mevcut Seçenek Grupları Listesi
-                    Text('Mevcut Seçenek Grupları (${currentGroups.length}):', style: const TextStyle(color: AppColors.accent, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text('${'existing_option_groups'.tr} (${currentGroups.length}):', style: const TextStyle(color: AppColors.accent, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
 
                     if (currentGroups.isEmpty)
@@ -601,9 +601,9 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                           color: AppColors.background.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text(
-                          'Bu ürüne henüz seçenek eklenmemiş. Aşağıdan yeni seçenek grubu ve seçenek maddeleri ekleyebilirsiniz.',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                        child: Text(
+                          'no_options_yet'.tr,
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                         ),
                       ),
 
@@ -678,21 +678,21 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            '2. Yeni Seçenek Başlığı Belirleyin:',
-                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                          Text(
+                            'option_title_step'.tr,
+                            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Örn: "Şeker Durumu", "Sos Tercihi", "Ekmek Seçimi"',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+                          Text(
+                            'option_title_subhint'.tr,
+                            style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
                           ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: groupTitleCtrl,
                             style: const TextStyle(color: Colors.white, fontSize: 14),
                             decoration: InputDecoration(
-                              labelText: 'Seçenek Başlığı (Örn: Şeker)',
+                              labelText: 'option_title_field'.tr,
                               labelStyle: const TextStyle(color: AppColors.accent, fontSize: 12),
                               hintText: 'Şeker, Sos vb.',
                               hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
@@ -703,14 +703,14 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'Seçenek Maddelerini + ile Ekleyin:',
-                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                          Text(
+                            'option_items_step'.tr,
+                            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Örn: "Sade" yazıp + ya basın, "Orta" yazıp + ya basın...',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+                          Text(
+                            'option_items_subhint'.tr,
+                            style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
                           ),
                           const SizedBox(height: 8),
                           Row(
@@ -720,7 +720,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                   controller: itemCtrl,
                                   style: const TextStyle(color: Colors.white, fontSize: 14),
                                   decoration: InputDecoration(
-                                    labelText: 'Seçenek (Örn: Sade / Orta / Şekerli)',
+                                    labelText: 'option_item_field'.tr,
                                     labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                                     filled: true,
                                     fillColor: AppColors.cardBg,
@@ -754,13 +754,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                   final item = itemCtrl.text.trim();
                                   if (title.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Lütfen önce Seçenek Başlığı girin (Örn: Şeker)!'), backgroundColor: AppColors.warning),
+                                      SnackBar(content: Text('enter_option_title_warn'.tr), backgroundColor: AppColors.warning),
                                     );
                                     return;
                                   }
                                   if (item.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Lütfen eklenecek seçeneği yazın (Örn: Sade)!'), backgroundColor: AppColors.warning),
+                                      SnackBar(content: Text('enter_option_item_warn'.tr), backgroundColor: AppColors.warning),
                                     );
                                     return;
                                   }
@@ -786,7 +786,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 icon: const Icon(Icons.add, color: Colors.white, size: 18),
-                                label: const Text('Ekle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                label: Text('add_item_btn'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                               ),
                             ],
                           ),
@@ -800,7 +800,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Kapat', style: TextStyle(color: AppColors.textMuted)),
+                child: Text('close_btn'.tr, style: const TextStyle(color: AppColors.textMuted)),
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -834,11 +834,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   Navigator.pop(ctx);
                   _loadAllData();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Seçenekler ürüne başarıyla kaydedildi!'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text('options_saved_success'.tr), backgroundColor: AppColors.success),
                   );
                 },
                 icon: const Icon(Icons.save, color: Colors.white, size: 18),
-                label: const Text('Kaydet ve Uygula', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                label: Text('save_and_apply_btn'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
           );
@@ -853,7 +853,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
   void _openAddProductDialog({Map<String, dynamic>? editProduct}) {
     if (_categories.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen önce en az 1 kategori ekleyin!')),
+        SnackBar(content: Text('add_first_category_warn'.tr)),
       );
       return;
     }
@@ -906,25 +906,25 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   isUploadingImage = false;
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Fotoğraf başarıyla yüklendi!'), backgroundColor: AppColors.success),
+                  SnackBar(content: Text('photo_uploaded_success'.tr), backgroundColor: AppColors.success),
                 );
               } else {
                 setDialogState(() => isUploadingImage = false);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(data['message'] ?? 'Fotoğraf yüklenemedi.'), backgroundColor: AppColors.danger),
+                  SnackBar(content: Text(data['message'] ?? 'photo_upload_failed'.tr), backgroundColor: AppColors.danger),
                 );
               }
             } catch (e) {
               setDialogState(() => isUploadingImage = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Fotoğraf seçme hatası: $e'), backgroundColor: AppColors.danger),
+                SnackBar(content: Text('${'photo_pick_error'.tr}: $e'), backgroundColor: AppColors.danger),
               );
             }
           }
 
           return AlertDialog(
             backgroundColor: AppColors.cardBg,
-            title: Text(isEditing ? 'Ürün Düzenle' : 'Yeni Ürün Ekle', style: const TextStyle(color: Colors.white)),
+            title: Text(isEditing ? 'edit_product'.tr : 'add_product'.tr, style: const TextStyle(color: Colors.white)),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -939,18 +939,18 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                       child: Text(c['name']),
                     )).toList(),
                     onChanged: (val) => setDialogState(() => selectedCatId = val!),
-                    decoration: const InputDecoration(labelText: 'Kategori', labelStyle: TextStyle(color: AppColors.textMuted)),
+                    decoration: InputDecoration(labelText: 'category_select'.tr, labelStyle: const TextStyle(color: AppColors.textMuted)),
                   ),
                   TextField(
                     controller: nameCtrl,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(labelText: 'Ürün Adı *', labelStyle: TextStyle(color: AppColors.textMuted)),
+                    decoration: InputDecoration(labelText: 'product_name_req'.tr, labelStyle: const TextStyle(color: AppColors.textMuted)),
                   ),
                   TextField(
                     controller: priceCtrl,
                     keyboardType: TextInputType.number,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(labelText: 'Fiyat (TL) *', labelStyle: TextStyle(color: AppColors.textMuted)),
+                    decoration: InputDecoration(labelText: 'product_price_req'.tr, labelStyle: const TextStyle(color: AppColors.textMuted)),
                   ),
                   const SizedBox(height: 12),
                   // Galeri Yükleme Butonu & Link Kutusu
@@ -961,7 +961,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                           controller: imgCtrl,
                           style: const TextStyle(color: Colors.white, fontSize: 13),
                           decoration: const InputDecoration(
-                            labelText: 'Görsel Linki / URL',
+                            labelText: 'product_img'.tr,
                             hintText: 'https://...',
                             hintStyle: TextStyle(color: Colors.white24, fontSize: 11),
                             labelStyle: TextStyle(color: AppColors.textMuted),
@@ -979,7 +979,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         icon: isUploadingImage
                             ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                             : const Icon(Icons.photo_library, size: 18),
-                        label: Text(isUploadingImage ? '...' : 'Galeri', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        label: Text(isUploadingImage ? '...' : 'gallery_btn'.tr, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -1000,13 +1000,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   TextField(
                     controller: descCtrl,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(labelText: 'Açıklama (Opsiyonel)', labelStyle: TextStyle(color: AppColors.textMuted)),
+                    decoration: InputDecoration(labelText: 'product_desc_opt'.tr, labelStyle: const TextStyle(color: AppColors.textMuted)),
                   ),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text('cancel_btn'.tr)),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
                 onPressed: () async {
@@ -1050,7 +1050,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   _loadAllData();
                 },
                 child: Text(
-                  isEditing ? 'Güncelle' : 'Ürünü Ekle',
+                  isEditing ? 'update_btn'.tr : 'add_product_btn'.tr,
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -1066,14 +1066,14 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
-        title: const Text('Ürünü Sil', style: TextStyle(color: Colors.white)),
-        content: Text('"$productName" ürününü silmek istediğinize emin misiniz?', style: const TextStyle(color: AppColors.textMuted)),
+        title: Text('delete_product_title'.tr, style: const TextStyle(color: Colors.white)),
+        content: Text('"$productName" ${'delete_product_confirm'.tr}', style: const TextStyle(color: AppColors.textMuted)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cancel_btn'.tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Evet, Sil'),
+            child: Text('yes_delete'.tr),
           ),
         ],
       ),
@@ -1094,7 +1094,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         if (res.statusCode == 200 && data['success'] == true) {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('"$productName" başarıyla silindi.'), backgroundColor: AppColors.success),
+            SnackBar(content: Text('"$productName" ${'product_deleted_success'.tr}'), backgroundColor: AppColors.success),
           );
           _loadAllData();
         } else {
@@ -1150,7 +1150,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(nextPaid ? '✅ Sipariş ÖDENDİ olarak işaretlendi.' : '⏳ Sipariş ÖDENMEDİ (Açık Hesap) olarak işaretlendi.'),
+            content: Text(nextPaid ? 'order_marked_paid'.tr : 'order_marked_unpaid'.tr),
             backgroundColor: nextPaid ? AppColors.success : AppColors.warning,
             duration: const Duration(seconds: 2),
           ),
@@ -1167,17 +1167,17 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
-        title: const Text('Tüm Hesabı Kapat', style: TextStyle(color: Colors.white)),
+        title: Text('settle_all_account_title'.tr, style: const TextStyle(color: Colors.white)),
         content: Text(
-          '"$customerName" adlı müşterinin bekleyen TÜM ödenmemiş siparişlerini ÖDENDİ olarak kapatmak istiyor musunuz?',
+          '"$customerName" ${'settle_all_account_confirm'.tr}',
           style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cancel_btn'.tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Evet, Hesabı Kapat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text('settle_all_account_confirm_btn'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1199,7 +1199,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('"$customerName" adlı müşterinin tüm açık hesapları başarıyla kapatıldı!'),
+              content: Text('"$customerName" ${'customer_all_settled_success'.tr}'),
               backgroundColor: AppColors.success,
             ),
           );
@@ -1296,11 +1296,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            customer['full_name'] ?? 'Müşteri Siparişleri',
+                            customer['full_name'] ?? 'customer_orders_history'.tr,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                           Text(
-                            'Kullanıcı: @${customer['username']} • Tel: ${customer['phone'] ?? '-'}',
+                            '${'user_label'.tr}: @${customer['username']} • ${'phone_short'.tr}: ${customer['phone'] ?? '-'}',
                             style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                           ),
                         ],
@@ -1328,7 +1328,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Açık Hesap (Ödenmemiş):', style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
+                            Text('${'unpaid_balance'.tr}:', style: const TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 2),
                             Text('₺${unpaidTotal.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.warning, fontSize: 18, fontWeight: FontWeight.bold)),
                           ],
@@ -1340,7 +1340,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Toplam Ödenen:', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                            Text('${'total_paid'.tr}:', style: const TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 2),
                             Text('₺${paidTotal.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.success, fontSize: 18, fontWeight: FontWeight.bold)),
                           ],
@@ -1357,7 +1357,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                             Navigator.pop(ctx);
                             await _markCustomerAllPaid(customerId, customer['full_name']);
                           },
-                          child: const Text('Hesabı Kapat', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                          child: Text('close_account_btn'.tr, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                         ),
                     ],
                   ),
@@ -1369,31 +1369,31 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      const Text('Dönem: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('${'period'.tr}: ', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
                       const SizedBox(width: 4),
                       ChoiceChip(
-                        label: const Text('Tüm Zamanlar'),
+                        label: Text('period_all'.tr),
                         selected: selectedPeriod == 0,
                         selectedColor: AppColors.primary,
                         onSelected: (v) => setModalState(() => selectedPeriod = 0),
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('Bugün (Günlük)'),
+                        label: Text('period_daily'.tr),
                         selected: selectedPeriod == 1,
                         selectedColor: AppColors.primary,
                         onSelected: (v) => setModalState(() => selectedPeriod = 1),
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('Bu Hafta (7 Gün)'),
+                        label: Text('period_weekly'.tr),
                         selected: selectedPeriod == 2,
                         selectedColor: AppColors.primary,
                         onSelected: (v) => setModalState(() => selectedPeriod = 2),
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('Bu Ay (30 Gün)'),
+                        label: Text('period_monthly'.tr),
                         selected: selectedPeriod == 3,
                         selectedColor: AppColors.primary,
                         onSelected: (v) => setModalState(() => selectedPeriod = 3),
@@ -1408,31 +1408,31 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      const Text('Ödeme: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('${'payment_status'.tr}: ', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
                       const SizedBox(width: 4),
                       ChoiceChip(
-                        label: const Text('Tümü'),
+                        label: Text('pay_all'.tr),
                         selected: selectedPayFilter == 0,
                         selectedColor: AppColors.accent,
                         onSelected: (v) => setModalState(() => selectedPayFilter = 0),
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('⏳ Ödenmemişler (Açık)'),
+                        label: Text('pay_unpaid'.tr),
                         selected: selectedPayFilter == 1,
                         selectedColor: AppColors.warning,
                         onSelected: (v) => setModalState(() => selectedPayFilter = 1),
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('✅ Ödenenler (Geçmiş)'),
+                        label: Text('pay_paid'.tr),
                         selected: selectedPayFilter == 2,
                         selectedColor: AppColors.success,
                         onSelected: (v) => setModalState(() => selectedPayFilter = 2),
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('❌ İptal Edilenler'),
+                        label: Text('pay_cancelled'.tr),
                         selected: selectedPayFilter == 3,
                         selectedColor: AppColors.danger,
                         onSelected: (v) => setModalState(() => selectedPayFilter = 3),
@@ -1446,8 +1446,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 // SİPARİŞ LİSTESİ
                 Expanded(
                   child: filteredOrders.isEmpty
-                      ? const Center(
-                          child: Text('Seçilen filtreye uygun sipariş kaydı bulunamadı.', style: TextStyle(color: AppColors.textMuted)),
+                      ? Center(
+                          child: Text('no_filtered_records'.tr, style: const TextStyle(color: AppColors.textMuted)),
                         )
                       : ListView.builder(
                           itemCount: filteredOrders.length,
@@ -1473,7 +1473,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
+                                        Text('${'order_number'.tr} #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
                                         // Ödeme Durumu Rozeti & Toggle Butonu
                                         InkWell(
                                           onTap: () async {
@@ -1493,7 +1493,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                                 Icon(isPaid ? Icons.check_circle : Icons.hourglass_top, color: isPaid ? AppColors.success : AppColors.warning, size: 14),
                                                 const SizedBox(width: 4),
                                                 Text(
-                                                  isPaid ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                                                  isPaid ? 'status_paid'.tr : 'status_unpaid'.tr,
                                                   style: TextStyle(color: isPaid ? AppColors.success : AppColors.warning, fontSize: 11, fontWeight: FontWeight.bold),
                                                 ),
                                               ],
@@ -1503,10 +1503,10 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                                    Text('${'date'.tr}: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                                     if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
                                       const SizedBox(height: 2),
-                                      Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                                      Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
                                     ],
                                     const Divider(color: Colors.white10, height: 12),
                                     ...items.map((it) => Padding(
@@ -1520,7 +1520,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.success)),
+                                        Text('${'total_amount'.tr}: ₺${ord['total_price']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.success)),
                                         _buildStatusChip(ord['status']),
                                       ],
                                     ),
@@ -1550,7 +1550,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
-        title: Text(isEditing ? 'Müşteriyi Düzenle' : 'Yeni Müşteri Tanımla', style: const TextStyle(color: Colors.white)),
+        title: Text(isEditing ? 'edit_customer'.tr : 'add_customer'.tr, style: const TextStyle(color: Colors.white)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1558,24 +1558,24 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               TextField(
                 controller: nameCtrl,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Müşteri Ad Soyad (Ofis/Masa No) *', labelStyle: TextStyle(color: AppColors.textMuted)),
+                decoration: InputDecoration(labelText: 'customer_name_req'.tr, labelStyle: const TextStyle(color: AppColors.textMuted)),
               ),
               TextField(
                 controller: phoneCtrl,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Telefon Numarası', labelStyle: TextStyle(color: AppColors.textMuted)),
+                decoration: InputDecoration(labelText: 'customer_phone'.tr, labelStyle: const TextStyle(color: AppColors.textMuted)),
               ),
               TextField(
                 controller: userCtrl,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Giriş Kullanıcı Adı *', labelStyle: TextStyle(color: AppColors.textMuted)),
+                decoration: InputDecoration(labelText: 'customer_username_req'.tr, labelStyle: const TextStyle(color: AppColors.textMuted)),
               ),
               TextField(
                 controller: passCtrl,
                 obscureText: true,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  labelText: isEditing ? 'Yeni Şifre (Değişmeyecekse boş bırakın)' : 'Giriş Şifresi *',
+                  labelText: isEditing ? 'customer_password_edit_hint'.tr : 'customer_password_req'.tr,
                   labelStyle: const TextStyle(color: AppColors.textMuted),
                 ),
               ),
@@ -1583,7 +1583,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('cancel_btn'.tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
@@ -1626,19 +1626,19 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 _loadAllData();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(isEditing ? 'Müşteri bilgileri güncellendi.' : 'Müşteri hesabı başarıyla oluşturuldu.'),
+                    content: Text(isEditing ? 'customer_updated_success'.tr : 'customer_created_success'.tr),
                     backgroundColor: AppColors.success,
                   ),
                 );
               } else {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(data['message'] ?? 'İşlem başarısız.'), backgroundColor: AppColors.danger),
+                  SnackBar(content: Text(data['message'] ?? 'operation_failed'.tr), backgroundColor: AppColors.danger),
                 );
               }
             },
             child: Text(
-              isEditing ? 'Güncelle' : 'Müşteriyi Kaydet',
+              isEditing ? 'update_btn'.tr : 'customer_save_btn'.tr,
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
@@ -1652,10 +1652,10 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
-        title: const Text('Müşteriyi Sil', style: TextStyle(color: Colors.white)),
-        content: Text('"$customerName" adlı müşteriyi ve tüm sipariş geçmişini silmek istediğinize emin misiniz?', style: const TextStyle(color: AppColors.textMuted)),
+        title: Text('delete_customer_title'.tr, style: const TextStyle(color: Colors.white)),
+        content: Text('"$customerName" ${'delete_customer_confirm'.tr}', style: const TextStyle(color: AppColors.textMuted)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cancel_btn'.tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
@@ -1680,13 +1680,13 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         if (res.statusCode == 200 && data['success'] == true) {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('"$customerName" başarıyla silindi.'), backgroundColor: AppColors.success),
+            SnackBar(content: Text('"$customerName" ${'customer_deleted_success'.tr}'), backgroundColor: AppColors.success),
           );
           _loadAllData();
         } else {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'] ?? 'Müşteri silinemedi.'), backgroundColor: AppColors.danger),
+            SnackBar(content: Text(data['message'] ?? 'customer_delete_failed'.tr), backgroundColor: AppColors.danger),
           );
         }
       } catch (e) {
@@ -1968,7 +1968,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
 
   Widget _buildProductsTab() {
     if (_products.isEmpty) {
-      return const Center(child: Text('Henüz ürün bulunmuyor. Ürün Ekle butonuyla ekleyebilirsiniz.', style: TextStyle(color: AppColors.textMuted)));
+      return Center(child: Text('no_products'.tr, style: const TextStyle(color: AppColors.textMuted)));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -2030,8 +2030,8 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
 
   Widget _buildOptionsTab() {
     if (_products.isEmpty) {
-      return const Center(
-        child: Text('Henüz ürün bulunmuyor. Önce Ürünler sekmesinden ürün ekleyin.', style: TextStyle(color: AppColors.textMuted)),
+      return Center(
+        child: Text('no_products_for_options'.tr, style: const TextStyle(color: AppColors.textMuted)),
       );
     }
 
@@ -2074,15 +2074,15 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                      label: const Text('Seçenek Ekle / Düzenle', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
+                      label: Text('add_edit_option'.tr, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 if (groups.isEmpty) ...[
-                  const Text(
-                    'Tanımlı seçenek bulunmuyor (Şeker, Sos vb. eklemek için butona dokunun).',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontStyle: FontStyle.italic),
+                  Text(
+                    'no_options_defined'.tr,
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontStyle: FontStyle.italic),
                   ),
                 ] else ...[
                   ...groups.map((g) {
@@ -2136,7 +2136,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
 
   Widget _buildCategoriesTab() {
     if (_categories.isEmpty) {
-      return const Center(child: Text('Henüz kategori bulunmuyor. Kategori Ekle butonuyla ekleyebilirsiniz.', style: TextStyle(color: AppColors.textMuted)));
+      return Center(child: Text('no_categories_add_hint'.tr, style: const TextStyle(color: AppColors.textMuted)));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -2152,7 +2152,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               child: Icon(Icons.category, color: Colors.white, size: 20),
             ),
             title: Text(cat['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            subtitle: Text('Sıra: ${cat['sort_order'] ?? 0}', style: const TextStyle(color: AppColors.textMuted)),
+            subtitle: Text('${'category_sort_order'.tr}: ${cat['sort_order'] ?? 0}', style: const TextStyle(color: AppColors.textMuted)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -2174,7 +2174,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
 
   Widget _buildCustomersTab() {
     if (_customers.isEmpty) {
-      return const Center(child: Text('Kayıtlı müşteri yok. Müşteri Ekle ile dükkanınıza özel müşteri hesabı oluşturun.', style: TextStyle(color: AppColors.textMuted)));
+      return Center(child: Text('no_customers_add_hint'.tr, style: const TextStyle(color: AppColors.textMuted)));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -2221,18 +2221,18 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         children: [
                           Text(c['full_name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                           const SizedBox(height: 2),
-                          Text('Kullanıcı: @${c['username']} • Tel: ${c['phone'] ?? '-'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          Text('${'user_label'.tr}: @${c['username']} • ${'phone_short'.tr}: ${c['phone'] ?? '-'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                         ],
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.edit, color: AppColors.primary, size: 20),
-                      tooltip: 'Düzenle',
+                      tooltip: 'update_btn'.tr,
                       onPressed: () => _openAddCustomerDialog(editCustomer: c),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
-                      tooltip: 'Sil',
+                      tooltip: 'delete_btn'.tr,
                       onPressed: () => _deleteCustomer(c['id'], c['full_name']),
                     ),
                   ],
@@ -2242,14 +2242,14 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      unpaidTotal > 0 ? 'Açık Hesap (Borç): ₺${unpaidTotal.toStringAsFixed(2)}' : 'Açık Hesap: ₺0.00 (Borç Yok)',
+                      unpaidTotal > 0 ? '${'unpaid_balance'.tr}: ₺${unpaidTotal.toStringAsFixed(2)}' : '${'unpaid_balance'.tr}: ₺0.00 (${'no_debt'.tr})',
                       style: TextStyle(
                         color: unpaidTotal > 0 ? AppColors.warning : AppColors.success,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
                     ),
-                    Text('$orderCount Toplam Sipariş', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                    Text('$orderCount ${'total_orders_count'.tr}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -2263,7 +2263,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 0),
                     ),
                     icon: const Icon(Icons.receipt_long, size: 16, color: Colors.white),
-                    label: const Text('Hesap & Sipariş Geçmişi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    label: Text('customer_orders_history'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                     onPressed: () => _openCustomerOrderHistoryDialog(c),
                   ),
                 ),
