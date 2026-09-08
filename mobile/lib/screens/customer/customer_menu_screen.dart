@@ -23,6 +23,9 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   bool _isLoading = false;
   Timer? _liveTimer;
 
+  int _selectedPeriod = 0; // 0: Tümü, 1: Bugün (Günlük), 2: Bu Hafta (Haftalık), 3: Bu Ay (Aylık)
+  int _selectedPayFilter = 0; // 0: Tümü, 1: Ödenmemişler (Açık Hesap), 2: Ödenenler (Kapatılanlar)
+
   // Sepet: Liste halinde tutuyoruz. Her eleman: { 'product': item, 'quantity': 1, 'selected_options': 'Sade, Orta vb.' }
   final List<Map<String, dynamic>> _cartList = [];
   final TextEditingController _orderNotesController = TextEditingController();
@@ -850,82 +853,296 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     if (_myOrders.isEmpty) {
       return const Center(child: Text('Henüz verilmiş bir siparişiniz bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
     }
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _myOrders.length,
-      itemBuilder: (ctx, i) {
-        final ord = _myOrders[i];
-        final items = ord['items'] as List<dynamic>? ?? [];
 
-        return Card(
-          color: AppColors.cardBg,
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final now = DateTime.now();
+
+    // Filtreleme mantığı
+    final filteredOrders = _myOrders.where((ord) {
+      final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
+      if (_selectedPayFilter == 1 && isPaid) return false;
+      if (_selectedPayFilter == 2 && !isPaid) return false;
+
+      if (_selectedPeriod > 0) {
+        DateTime? orderDate = DateTime.tryParse(ord['created_at'] ?? '');
+        if (orderDate != null) {
+          if (_selectedPeriod == 1) {
+            // Bugün (Günlük)
+            if (orderDate.year != now.year || orderDate.month != now.month || orderDate.day != now.day) {
+              return false;
+            }
+          } else if (_selectedPeriod == 2) {
+            // Bu Hafta (7 Gün)
+            if (now.difference(orderDate).inDays > 7) {
+              return false;
+            }
+          } else if (_selectedPeriod == 3) {
+            // Bu Ay (30 Gün)
+            if (now.difference(orderDate).inDays > 30) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    }).toList();
+
+    // Müşterinin Toplam Açık Hesap (Ödenmemiş Borcu) ve Toplam Ödediği Tutarı Hesapla
+    double unpaidTotal = 0;
+    double paidTotal = 0;
+    for (var o in _myOrders) {
+      final amt = double.tryParse(o['total_price']?.toString() ?? '0') ?? 0;
+      final isPaid = (o['is_paid'] == 1 || o['is_paid'] == true);
+      if (isPaid) {
+        paidTotal += amt;
+      } else {
+        unpaidTotal += amt;
+      }
+    }
+
+    return Column(
+      children: [
+        // 1. Hesap Özeti Kartı (Müşterinin Güncel Borcu & Toplam Ödediği Tutar)
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: unpaidTotal > 0 ? AppColors.warning.withOpacity(0.4) : AppColors.success.withOpacity(0.4),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-                    Row(
+                    const Row(
                       children: [
-                        Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: (ord['is_paid'] == 1 || ord['is_paid'] == true)
-                                ? AppColors.success.withOpacity(0.15)
-                                : AppColors.warning.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
-                            ),
-                          ),
-                          child: Text(
-                            (ord['is_paid'] == 1 || ord['is_paid'] == true) ? 'ÖDENDİ' : 'ÖDENMEDİ',
-                            style: TextStyle(
-                              color: (ord['is_paid'] == 1 || ord['is_paid'] == true) ? AppColors.success : AppColors.warning,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        _buildStatusChip(ord['status']),
+                        Icon(Icons.hourglass_top, color: AppColors.warning, size: 14),
+                        SizedBox(width: 4),
+                        Text('Açık Hesap (Ödenecek):', style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
                       ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('₺${unpaidTotal.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.warning, fontSize: 19, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              Container(height: 40, width: 1, color: Colors.white12),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: AppColors.success, size: 14),
+                        SizedBox(width: 4),
+                        Text('Toplam Ödenen:', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('₺${paidTotal.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.success, fontSize: 19, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 2. Filtreler (Dönem ve Ödeme Durumu)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Column(
+            children: [
+              // Zaman Filtresi
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    const Text('Dönem: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    ChoiceChip(
+                      label: const Text('Tümü'),
+                      selected: _selectedPeriod == 0,
+                      selectedColor: AppColors.primary,
+                      onSelected: (v) => setState(() => _selectedPeriod = 0),
+                    ),
+                    const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: const Text('Bugün (Günlük)'),
+                      selected: _selectedPeriod == 1,
+                      selectedColor: AppColors.primary,
+                      onSelected: (v) => setState(() => _selectedPeriod = 1),
+                    ),
+                    const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: const Text('Bu Hafta (7 Gün)'),
+                      selected: _selectedPeriod == 2,
+                      selectedColor: AppColors.primary,
+                      onSelected: (v) => setState(() => _selectedPeriod = 2),
+                    ),
+                    const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: const Text('Bu Ay (30 Gün)'),
+                      selected: _selectedPeriod == 3,
+                      selectedColor: AppColors.primary,
+                      onSelected: (v) => setState(() => _selectedPeriod = 3),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                const Divider(color: Colors.white12, height: 16),
-                ...items.map((it) {
-                  final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']})', style: const TextStyle(color: Colors.white70)),
-                        if (hasOpts) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12),
-                            child: Text('Seçenek: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
-                          ),
-                        ],
-                      ],
+              ),
+              const SizedBox(height: 4),
+              // Ödeme Filtresi
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    const Text('Ödeme: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    ChoiceChip(
+                      label: const Text('Tümü'),
+                      selected: _selectedPayFilter == 0,
+                      selectedColor: AppColors.accent,
+                      onSelected: (v) => setState(() => _selectedPayFilter = 0),
                     ),
-                  );
-                }),
-                const SizedBox(height: 8),
-                Text('Toplam Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
-              ],
-            ),
+                    const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: const Text('⏳ Ödenmemişler'),
+                      selected: _selectedPayFilter == 1,
+                      selectedColor: AppColors.warning,
+                      onSelected: (v) => setState(() => _selectedPayFilter = 1),
+                    ),
+                    const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: const Text('✅ Ödenenler'),
+                      selected: _selectedPayFilter == 2,
+                      selectedColor: AppColors.success,
+                      onSelected: (v) => setState(() => _selectedPayFilter = 2),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+
+        const Divider(color: Colors.white12, height: 16),
+
+        // 3. Sipariş Listesi
+        Expanded(
+          child: filteredOrders.isEmpty
+              ? const Center(
+                  child: Text('Seçilen filtreye ait sipariş kaydı bulunamadı.', style: TextStyle(color: AppColors.textMuted)),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  itemCount: filteredOrders.length,
+                  itemBuilder: (ctx, i) {
+                    final ord = filteredOrders[i];
+                    final items = ord['items'] as List<dynamic>? ?? [];
+                    final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
+
+                    return Card(
+                      color: AppColors.cardBg,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: BorderSide(
+                          color: isPaid ? AppColors.success.withOpacity(0.3) : AppColors.warning.withOpacity(0.4),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                                Row(
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(right: 6),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: isPaid ? AppColors.success.withOpacity(0.15) : AppColors.warning.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isPaid ? AppColors.success : AppColors.warning,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isPaid ? Icons.check_circle : Icons.hourglass_top,
+                                            color: isPaid ? AppColors.success : AppColors.warning,
+                                            size: 13,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isPaid ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                                            style: TextStyle(
+                                              color: isPaid ? AppColors.success : AppColors.warning,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    _buildStatusChip(ord['status']),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                            if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                            ],
+                            const Divider(color: Colors.white12, height: 16),
+                            ...items.map((it) {
+                              final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']})', style: const TextStyle(color: Colors.white70)),
+                                    if (hasOpts) ...[
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 12),
+                                        child: Text('Seçenek: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            }),
+                            const SizedBox(height: 8),
+                            Text('Toplam Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 
