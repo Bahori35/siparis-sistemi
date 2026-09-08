@@ -141,11 +141,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         builder: (ctx) => AlertDialog(
           backgroundColor: AppColors.cardBg,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.storefront_outlined, color: AppColors.danger),
-              SizedBox(width: 8),
-              Text('Dükkanı Kapat', style: TextStyle(color: Colors.white, fontSize: 18)),
+              const Icon(Icons.storefront_outlined, color: AppColors.danger),
+              const SizedBox(width: 8),
+              Text('close_shop_dialog_title'.tr, style: const TextStyle(color: Colors.white, fontSize: 18)),
             ],
           ),
           content: Column(
@@ -161,11 +161,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 controller: noteCtrl,
                 style: const TextStyle(color: Colors.white),
                 maxLines: 2,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'close_shop_reason_label'.tr,
                   hintText: 'close_shop_reason_hint'.tr,
-                  labelStyle: TextStyle(color: AppColors.textMuted),
-                  hintStyle: TextStyle(color: Colors.white24, fontSize: 12),
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
                 ),
               ),
             ],
@@ -253,11 +253,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppColors.cardBg,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.access_time_filled, color: AppColors.primary),
-              SizedBox(width: 8),
-              Text('Mesai Saatleri Ayarı', style: TextStyle(color: Colors.white, fontSize: 18)),
+              const Icon(Icons.access_time_filled, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('work_hours_dialog_title'.tr, style: const TextStyle(color: Colors.white, fontSize: 18)),
             ],
           ),
           content: Column(
@@ -394,9 +394,9 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             TextField(
               controller: nameCtrl,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'category_name_hint'.tr,
-                labelStyle: TextStyle(color: AppColors.textMuted),
+                labelStyle: const TextStyle(color: AppColors.textMuted),
               ),
             ),
             const SizedBox(height: 12),
@@ -404,9 +404,9 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
               controller: sortCtrl,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'category_order_label'.tr,
-                labelStyle: TextStyle(color: AppColors.textMuted),
+                labelStyle: const TextStyle(color: AppColors.textMuted),
               ),
             ),
           ],
@@ -546,10 +546,10 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
             backgroundColor: AppColors.cardBg,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
-              children: const [
-                Icon(Icons.tune, color: AppColors.primary, size: 22),
-                SizedBox(width: 8),
-                Text('Ürün Seçenekleri Yönetimi', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+              children: [
+                const Icon(Icons.tune, color: AppColors.primary, size: 22),
+                const SizedBox(width: 8),
+                Text('manage_options'.tr, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
               ],
             ),
             content: SizedBox(
@@ -960,11 +960,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                         child: TextField(
                           controller: imgCtrl,
                           style: const TextStyle(color: Colors.white, fontSize: 13),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'product_img'.tr,
                             hintText: 'https://...',
-                            hintStyle: TextStyle(color: Colors.white24, fontSize: 11),
-                            labelStyle: TextStyle(color: AppColors.textMuted),
+                            hintStyle: const TextStyle(color: Colors.white24, fontSize: 11),
+                            labelStyle: const TextStyle(color: AppColors.textMuted),
                           ),
                         ),
                       ),
