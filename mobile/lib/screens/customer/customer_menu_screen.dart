@@ -410,7 +410,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         setState(() {
           _cartList.clear();
           _orderNotesController.clear();
-          _currentTab = 2; // Siparişler sekmesine geç
+          _currentTab = 3; // Siparişler sekmesine geç
         });
         _loadMyOrders();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -469,6 +469,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         backgroundColor: AppColors.cardBg,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) => setState(() => _currentTab = index),
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Menü'),
@@ -480,6 +481,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             ),
             label: 'Sepetim',
           ),
+          const BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Hesabım'),
           const BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Siparişlerim'),
         ],
       ),
@@ -489,6 +491,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   Widget _buildCurrentTab() {
     if (_currentTab == 0) return _buildMenuTab();
     if (_currentTab == 1) return _buildCartTab();
+    if (_currentTab == 2) return _buildAccountTab();
     return _buildOrdersTab();
   }
 
@@ -849,9 +852,12 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     );
   }
 
-  Widget _buildOrdersTab() {
+  // ==========================================
+  // HESABIM SEKMESİ (GÜNLÜK/HAFTALIK/AYLIK VE ÖDENDİ/ÖDENMEDİ HESAP TAKİBİ)
+  // ==========================================
+  Widget _buildAccountTab() {
     if (_myOrders.isEmpty) {
-      return const Center(child: Text('Henüz verilmiş bir siparişiniz bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
+      return const Center(child: Text('Hesabınıza ait sipariş kaydı bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
     }
 
     final now = DateTime.now();
@@ -930,7 +936,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                       children: [
                         Icon(Icons.hourglass_top, color: AppColors.warning, size: 14),
                         SizedBox(width: 4),
-                        Text('Açık Hesap (Ödenecek):', style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
+                        Text('Açık Hesap (Borç):', style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -1018,14 +1024,14 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('⏳ Ödenmemişler'),
+                      label: const Text('⏳ Ödenmemişler (Açık)'),
                       selected: _selectedPayFilter == 1,
                       selectedColor: AppColors.warning,
                       onSelected: (v) => setState(() => _selectedPayFilter = 1),
                     ),
                     const SizedBox(width: 6),
                     ChoiceChip(
-                      label: const Text('✅ Ödenenler'),
+                      label: const Text('✅ Ödenenler (Geçmiş)'),
                       selected: _selectedPayFilter == 2,
                       selectedColor: AppColors.success,
                       onSelected: (v) => setState(() => _selectedPayFilter = 2),
@@ -1039,11 +1045,11 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
 
         const Divider(color: Colors.white12, height: 16),
 
-        // 3. Sipariş Listesi
+        // 3. Hesap Sipariş Listesi
         Expanded(
           child: filteredOrders.isEmpty
               ? const Center(
-                  child: Text('Seçilen filtreye ait sipariş kaydı bulunamadı.', style: TextStyle(color: AppColors.textMuted)),
+                  child: Text('Seçilen filtreye ait hesap kaydı bulunamadı.', style: TextStyle(color: AppColors.textMuted)),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
@@ -1143,6 +1149,95 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 ),
         ),
       ],
+    );
+  }
+
+  // ==========================================
+  // SİPARİŞLERİM SEKMESİ (DÜKKANA VERİLEN SİPARİŞLERİN CANLI TAKİBİ)
+  // ==========================================
+  Widget _buildOrdersTab() {
+    if (_myOrders.isEmpty) {
+      return const Center(child: Text('Henüz verilmiş bir siparişiniz bulunmuyor.', style: TextStyle(color: AppColors.textMuted)));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _myOrders.length,
+      itemBuilder: (ctx, i) {
+        final ord = _myOrders[i];
+        final items = ord['items'] as List<dynamic>? ?? [];
+        final isPaid = (ord['is_paid'] == 1 || ord['is_paid'] == true);
+
+        return Card(
+          color: AppColors.cardBg,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Sipariş #${ord['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                    Row(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isPaid ? AppColors.success.withOpacity(0.15) : AppColors.warning.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isPaid ? AppColors.success : AppColors.warning,
+                            ),
+                          ),
+                          child: Text(
+                            isPaid ? 'ÖDENDİ' : 'ÖDENMEDİ',
+                            style: TextStyle(
+                              color: isPaid ? AppColors.success : AppColors.warning,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        _buildStatusChip(ord['status']),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text('Tarih: ${ord['created_at']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text('Not: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                ],
+                const Divider(color: Colors.white12, height: 16),
+                ...items.map((it) {
+                  final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('• ${it['quantity']}x ${it['product_name']} (₺${it['unit_price']})', style: const TextStyle(color: Colors.white70)),
+                        if (hasOpts) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text('Seçenek: ${it['selected_options']}', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontStyle: FontStyle.italic)),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                Text('Toplam Tutar: ₺${ord['total_price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
