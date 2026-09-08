@@ -2222,31 +2222,31 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          unpaidTotal > 0 ? 'Açık Hesap (Borç): ₺${unpaidTotal.toStringAsFixed(2)}' : 'Açık Hesap: ₺0.00 (Borç Yok)',
-                          style: TextStyle(
-                            color: unpaidTotal > 0 ? AppColors.warning : AppColors.success,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text('$orderCount Toplam Sipariş', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                      ],
-                    ),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    Text(
+                      unpaidTotal > 0 ? 'Açık Hesap (Borç): ₺${unpaidTotal.toStringAsFixed(2)}' : 'Açık Hesap: ₺0.00 (Borç Yok)',
+                      style: TextStyle(
+                        color: unpaidTotal > 0 ? AppColors.warning : AppColors.success,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
-                      icon: const Icon(Icons.receipt_long, size: 16, color: Colors.white),
-                      label: const Text('Hesap & Siparişler', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                      onPressed: () => _openCustomerOrderHistoryDialog(c),
                     ),
+                    Text('$orderCount Toplam Sipariş', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 38,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                    icon: const Icon(Icons.receipt_long, size: 16, color: Colors.white),
+                    label: const Text('Hesap & Sipariş Geçmişi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    onPressed: () => _openCustomerOrderHistoryDialog(c),
+                  ),
                 ),
               ],
             ),
