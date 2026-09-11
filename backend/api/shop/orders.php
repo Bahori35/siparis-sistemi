@@ -120,9 +120,9 @@ if ($method === 'PUT') {
         $updates[] = 'status = :status';
         $params[':status'] = $newStatus;
 
-        if ($newStatus === 'CANCELLED' && $cancelReason !== null) {
+        if ($newStatus === 'CANCELLED') {
             $updates[] = 'cancel_reason = :cancel_reason';
-            $params[':cancel_reason'] = $cancelReason !== '' ? $cancelReason : null;
+            $params[':cancel_reason'] = ($cancelReason !== null && $cancelReason !== '') ? $cancelReason : 'Dükkan tarafından iptal edildi.';
         }
     }
 

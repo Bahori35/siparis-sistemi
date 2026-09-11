@@ -1142,7 +1142,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                               const SizedBox(height: 4),
                               Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
                             ],
-                            if (ord['status'] == 'CANCELLED' && ord['cancel_reason'] != null && ord['cancel_reason'].toString().isNotEmpty) ...[
+                            if (ord['status'] == 'CANCELLED') ...[
                               const SizedBox(height: 4),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1158,7 +1158,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
-                                        '${'cancel_reason_prefix'.tr}: ${ord['cancel_reason']}',
+                                        '${'cancel_reason_prefix'.tr}: ${ord['cancel_reason'] != null && ord['cancel_reason'].toString().trim().isNotEmpty ? ord['cancel_reason'] : 'default_cancel_reason'.tr}',
                                         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                                       ),
                                     ),
@@ -1258,7 +1258,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   const SizedBox(height: 4),
                   Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
                 ],
-                if (ord['status'] == 'CANCELLED' && ord['cancel_reason'] != null && ord['cancel_reason'].toString().isNotEmpty) ...[
+                if (ord['status'] == 'CANCELLED') ...[
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1274,7 +1274,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            '${'cancel_reason_prefix'.tr}: ${ord['cancel_reason']}',
+                            '${'cancel_reason_prefix'.tr}: ${ord['cancel_reason'] != null && ord['cancel_reason'].toString().trim().isNotEmpty ? ord['cancel_reason'] : 'default_cancel_reason'.tr}',
                             style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                           ),
                         ),

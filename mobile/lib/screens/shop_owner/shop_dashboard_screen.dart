@@ -1120,8 +1120,10 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         'order_id': orderId,
         'status': newStatus,
       };
-      if (newStatus == 'CANCELLED' && cancelReason != null && cancelReason.isNotEmpty) {
-        payload['cancel_reason'] = cancelReason;
+      if (newStatus == 'CANCELLED') {
+        payload['cancel_reason'] = (cancelReason != null && cancelReason.trim().isNotEmpty)
+            ? cancelReason.trim()
+            : 'default_cancel_reason'.tr;
       }
 
       final res = await http.put(
