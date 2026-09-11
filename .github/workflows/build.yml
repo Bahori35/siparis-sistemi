@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   # ==========================================
   # 1. ANDROID BUILD (APK)
@@ -76,6 +79,16 @@ jobs:
           name: Android-Release-APK
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 14
+
+      - name: Publish Direct Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: latest
+          name: Latest Release Build
+          files: mobile/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ==========================================
   # 2. IOS SIMULATOR DERLEME
