@@ -25,7 +25,7 @@ if ($method === 'GET') {
     $customerId = isset($_GET['customer_id']) ? (int)$_GET['customer_id'] : null;
     $period = $_GET['period'] ?? null; // 'daily', 'weekly', 'monthly'
     
-    $query = "SELECT o.id, o.shop_id, o.customer_id, o.total_price, o.status, o.is_paid, o.paid_at, o.notes, o.created_at,
+    $query = "SELECT o.id, o.shop_id, o.customer_id, o.total_price, o.status, o.is_paid, o.paid_at, o.notes, o.cancel_reason, o.created_at,
                      u.full_name as customer_name, u.phone as customer_phone
               FROM orders o
               LEFT JOIN users u ON o.customer_id = u.id
@@ -80,6 +80,7 @@ if ($method === 'PUT') {
     $orderId = (int)($body['order_id'] ?? 0);
     $newStatus = isset($body['status']) ? trim((string)$body['status']) : null;
     $isPaid = isset($body['is_paid']) ? (int)$body['is_paid'] : null;
+    $cancelReason = isset($body['cancel_reason']) ? trim((string)$body['cancel_reason']) : null;
 
     // Toplu müşteri ödemesi (Örn: Bir müşterinin tüm borcunu tek seferde kapatma)
     $bulkCustomerPayment = isset($body['bulk_customer_id']) ? (int)$body['bulk_customer_id'] : null;
@@ -118,6 +119,11 @@ if ($method === 'PUT') {
         }
         $updates[] = 'status = :status';
         $params[':status'] = $newStatus;
+
+        if ($newStatus === 'CANCELLED' && $cancelReason !== null) {
+            $updates[] = 'cancel_reason = :cancel_reason';
+            $params[':cancel_reason'] = $cancelReason !== '' ? $cancelReason : null;
+        }
     }
 
     if ($isPaid !== null) {
@@ -139,7 +145,7 @@ if ($method === 'PUT') {
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
 
-    Response::success(['order_id' => $orderId, 'status' => $newStatus, 'is_paid' => $isPaid], 'Sipariş başarıyla güncellendi.');
+    Response::success(['order_id' => $orderId, 'status' => $newStatus, 'is_paid' => $isPaid, 'cancel_reason' => $cancelReason], 'Sipariş başarıyla güncellendi.');
 }
 
 Response::error('Desteklenmeyen istek yöntemi.', 405);

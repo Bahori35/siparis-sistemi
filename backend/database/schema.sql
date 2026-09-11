@@ -114,6 +114,7 @@ CREATE TABLE orders (
     is_paid TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0: Ödenmedi (Açık Hesap / Borç), 1: Ödendi (Kapatıldı)',
     paid_at DATETIME NULL DEFAULT NULL COMMENT 'Hesabın / Siparişin ödendiği tarih',
     notes TEXT NULL COMMENT 'Müşteri Sipariş Notu',
+    cancel_reason VARCHAR(255) NULL COMMENT 'Sipariş İptal Sebebi / Dükkan Notu',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     

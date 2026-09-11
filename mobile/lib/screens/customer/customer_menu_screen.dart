@@ -1142,6 +1142,30 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                               const SizedBox(height: 4),
                               Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
                             ],
+                            if (ord['status'] == 'CANCELLED' && ord['cancel_reason'] != null && ord['cancel_reason'].toString().isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.danger.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.info_outline, color: AppColors.danger, size: 16),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        '${'cancel_reason_prefix'.tr}: ${ord['cancel_reason']}',
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             const Divider(color: Colors.white12, height: 16),
                             ...items.map((it) {
                               final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
@@ -1233,6 +1257,30 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                ],
+                if (ord['status'] == 'CANCELLED' && ord['cancel_reason'] != null && ord['cancel_reason'].toString().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline, color: AppColors.danger, size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '${'cancel_reason_prefix'.tr}: ${ord['cancel_reason']}',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
                 const Divider(color: Colors.white12, height: 16),
                 ...items.map((it) {

@@ -1113,22 +1113,92 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     }
   }
 
-  Future<void> _updateOrderStatus(int orderId, String newStatus) async {
+  Future<void> _updateOrderStatus(int orderId, String newStatus, {String? cancelReason}) async {
     final auth = Provider.of<AuthService>(context, listen: false);
     try {
+      final payload = <String, dynamic>{
+        'order_id': orderId,
+        'status': newStatus,
+      };
+      if (newStatus == 'CANCELLED' && cancelReason != null && cancelReason.isNotEmpty) {
+        payload['cancel_reason'] = cancelReason;
+      }
+
       final res = await http.put(
         Uri.parse(ApiConfig.shopOrders),
         headers: {
           'Authorization': 'Bearer ${auth.token}',
           'Content-Type': 'application/json'
         },
-        body: jsonEncode({'order_id': orderId, 'status': newStatus}),
+        body: jsonEncode(payload),
       );
       if (res.statusCode == 200) {
         _loadAllData();
       }
     } catch (e) {
       debugPrint('Durum güncelleme hatası: $e');
+    }
+  }
+
+  // Sipariş İptal Etme Dialog'u (Dükkan Sahibinin Müşteriye Not / İptal Nedeni Girmesi İçin)
+  Future<void> _showCancelOrderDialog(int orderId) async {
+    final reasonCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.cancel_outlined, color: AppColors.danger),
+            const SizedBox(width: 8),
+            Text('cancel_order_dialog_title'.tr, style: const TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'cancel_order_dialog_desc'.tr,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: reasonCtrl,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: 'cancel_reason_label'.tr,
+                hintText: 'cancel_reason_hint'.tr,
+                labelStyle: const TextStyle(color: AppColors.textMuted),
+                hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
+                filled: true,
+                fillColor: AppColors.background.withOpacity(0.5),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('cancel_btn'.tr, style: const TextStyle(color: AppColors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('confirm_cancel_btn'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _updateOrderStatus(orderId, 'CANCELLED', cancelReason: reasonCtrl.text.trim());
     }
   }
 
@@ -1507,6 +1577,10 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                                     if (ord['notes'] != null && ord['notes'].toString().isNotEmpty) ...[
                                       const SizedBox(height: 2),
                                       Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontStyle: FontStyle.italic)),
+                                    ],
+                                    if (ord['status'] == 'CANCELLED' && ord['cancel_reason'] != null && ord['cancel_reason'].toString().isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text('❌ ${'cancel_reason_prefix'.tr}: "${ord['cancel_reason']}"', style: const TextStyle(color: AppColors.danger, fontSize: 12, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)),
                                     ],
                                     const Divider(color: Colors.white10, height: 12),
                                     ...items.map((it) => Padding(
@@ -1916,6 +1990,11 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                 Text('${'customer_panel'.tr}: ${ord['customer_name']} (${ord['customer_phone'] ?? '-'})', style: const TextStyle(color: AppColors.textMuted)),
                 if (ord['notes'] != null && ord['notes'].toString().isNotEmpty)
                   Text('${'order_note_label'.tr}: "${ord['notes']}"', style: const TextStyle(color: AppColors.warning, fontStyle: FontStyle.italic)),
+                if (ord['status'] == 'CANCELLED' && ord['cancel_reason'] != null && ord['cancel_reason'].toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text('❌ ${'cancel_reason_prefix'.tr}: "${ord['cancel_reason']}"', style: const TextStyle(color: AppColors.danger, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)),
+                  ),
                 const Divider(color: Colors.white12, height: 20),
                 ...items.map((it) {
                   final hasOpts = it['selected_options'] != null && it['selected_options'].toString().trim().isNotEmpty;
@@ -1955,7 +2034,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
                     if (ord['status'] == 'PREPARING')
                       ElevatedButton(onPressed: () => _updateOrderStatus(ord['id'], 'DELIVERED'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.success), child: Text('status_delivered'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                     if (ord['status'] != 'DELIVERED' && ord['status'] != 'CANCELLED')
-                      TextButton(onPressed: () => _updateOrderStatus(ord['id'], 'CANCELLED'), child: Text('status_cancel'.tr, style: const TextStyle(color: AppColors.danger))),
+                      TextButton(onPressed: () => _showCancelOrderDialog(ord['id']), child: Text('status_cancel'.tr, style: const TextStyle(color: AppColors.danger))),
                   ],
                 )
               ],

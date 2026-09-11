@@ -206,6 +206,12 @@ class AppLocale {
       'total_orders_count': 'Toplam Sipariş',
       'no_debt': 'Borç Yok',
       'order_options_for_unit': 'Seçenekleri:',
+      'cancel_order_dialog_title': 'Siparişi İptal Et',
+      'cancel_order_dialog_desc': 'Bu siparişi iptal etmek istediğinize emin misiniz? Müşterinin görmesi için iptal gerekçesini aşağıya yazabilirsiniz:',
+      'cancel_reason_label': 'İptal Nedeni / Müşteri Bilgilendirmesi',
+      'cancel_reason_hint': 'Örn: Ürün tükendi, yoğunluk nedeniyle hazırlanamıyor vb.',
+      'cancel_reason_prefix': 'İptal Nedeni',
+      'confirm_cancel_btn': 'Siparişi İptal Et',
     },
 
     // 🇬🇧 İNGİLİZCE (EN)
@@ -395,6 +401,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇩🇪 ALMANCA (DE)
@@ -584,6 +596,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇸🇦 ARAPÇA (AR)
@@ -773,6 +791,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇷🇺 RUSÇA (RU)
@@ -962,6 +986,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇫🇷 FRANSIZCA (FR)
@@ -1151,6 +1181,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇪🇸 İSPANYOLCA (ES)
@@ -1340,6 +1376,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇮🇹 İTALYANCA (IT)
@@ -1529,6 +1571,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇦🇿 AZERBAYCANCA (AZ)
@@ -1718,6 +1766,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇮🇷 FARSÇA (FA)
@@ -1907,6 +1961,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇵🇹 PORTEKİZCE (PT)
@@ -2096,6 +2156,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇳🇱 FLEMENKÇE / HOLLANDACA (NL)
@@ -2285,6 +2351,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇺🇦 UKRAYNACA (UK)
@@ -2474,6 +2546,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇨🇳 ÇİNCE (ZH)
@@ -2663,6 +2741,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇯🇵 JAPONCA (JA)
@@ -2852,6 +2936,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
 
     // 🇰🇷 KORECE (KO)
@@ -3041,6 +3131,12 @@ class AppLocale {
       'total_orders_count': 'Total Orders',
       'no_debt': 'No Debt',
       'order_options_for_unit': 'Options:',
+      'cancel_order_dialog_title': 'Cancel Order',
+      'cancel_order_dialog_desc': 'Are you sure you want to cancel this order? You can provide a cancellation reason for the customer below:',
+      'cancel_reason_label': 'Cancellation Reason / Customer Note',
+      'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
+      'cancel_reason_prefix': 'Cancellation Reason',
+      'confirm_cancel_btn': 'Cancel Order',
     },
   };
 
