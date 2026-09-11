@@ -197,7 +197,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
         'is_open': nextStatus ? 1 : 0,
       };
       if (!nextStatus) {
-        payload['closed_note'] = (closedNote != null && closedNote.isNotEmpty) ? closedNote : 'Dükkan şu anda geçici olarak siparişe kapalıdır.';
+        payload['closed_note'] = (closedNote != null && closedNote.isNotEmpty) ? closedNote : 'İşletme şu anda geçici olarak siparişe kapalıdır.';
       }
 
       final res = await http.put(

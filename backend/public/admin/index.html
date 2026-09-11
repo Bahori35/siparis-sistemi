@@ -75,16 +75,16 @@
 
         <!-- Sağ Ana İçerik -->
         <main class="main-content">
-            <!-- 1. DÜKKANLAR SEKMESİ -->
+            <!-- 1. İŞLETMELER SEKMESİ -->
             <div id="shopsTabView">
                 <header class="top-header">
                     <div>
-                        <h1>Dükkan Yönetimi</h1>
-                        <p class="subtitle">Kayıtlı işletmeler, dükkan sahipleri ve istatistikler</p>
+                        <h1>İşletme Yönetimi</h1>
+                        <p class="subtitle">Kayıtlı işletmeler, işletme sahipleri ve istatistikler</p>
                     </div>
                     <button onclick="openNewShopModal()" class="btn-primary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        <span>Yeni Dükkan & Sahip Ekle</span>
+                        <span>Yeni İşletme & Sahip Ekle</span>
                     </button>
                 </header>
 
@@ -93,7 +93,7 @@
                     <div class="stat-card glass-card">
                         <div class="stat-icon icon-blue">🏪</div>
                         <div>
-                            <span class="stat-label">Toplam Dükkan</span>
+                            <span class="stat-label">Toplam İşletme</span>
                             <h3 id="statTotalShops">0</h3>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
                     </div>
                 </div>
 
-                <!-- Dükkanlar Tablosu -->
+                <!-- İşletmeler Tablosu -->
                 <div class="table-container glass-card">
                     <div class="table-header">
                         <h3>İşletme Listesi</h3>
@@ -131,8 +131,8 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Dükkan Adı</th>
-                                    <th>Dükkan Sahibi</th>
+                                    <th>İşletme Adı</th>
+                                    <th>İşletme Sahibi</th>
                                     <th>İletişim</th>
                                     <th>İstatistikler</th>
                                     <th>Durum</th>
@@ -154,7 +154,7 @@
                 <header class="top-header">
                     <div>
                         <h1>Sistem Duyuruları</h1>
-                        <p class="subtitle">Tüm dükkan sahiplerine gönderilecek anlık bildirim ve sistem duyuruları</p>
+                        <p class="subtitle">Tüm işletme sahiplerine gönderilecek anlık bildirim ve sistem duyuruları</p>
                     </div>
                     <button onclick="openNewAnnouncementModal()" class="btn-primary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -164,7 +164,7 @@
 
                 <div class="table-container glass-card">
                     <div class="table-header">
-                        <h3>Dükkan Sahiplerine Yayınlanan Duyurular</h3>
+                        <h3>İşletme Sahiplerine Yayınlanan Duyurular</h3>
                         <button onclick="loadAnnouncements()" class="btn-refresh" title="Yenile">⟳ Yenile</button>
                     </div>
                     <div class="responsive-table">
@@ -196,7 +196,7 @@
     <div id="newAnnouncementModal" class="modal-backdrop" style="display: none;">
         <div class="modal-box glass-card">
             <div class="modal-header">
-                <h2>📢 Dükkan Sahiplerine Duyuru Yayınla</h2>
+                <h2>📢 İşletme Sahiplerine Duyuru Yayınla</h2>
                 <button onclick="closeNewAnnouncementModal()" class="btn-close">&times;</button>
             </div>
             <form id="newAnnouncementForm" onsubmit="handleCreateAnnouncement(event)">
@@ -208,34 +208,34 @@
                     <input type="hidden" id="announcementTarget" value="SHOP_OWNER">
                     <div class="form-group">
                         <label>Duyuru Metni / İçeriği *</label>
-                        <textarea id="announcementContent" rows="5" placeholder="Dükkan sahiplerine iletmek istediğiniz duyuruyu buraya yazın..." required style="background: rgba(15, 23, 42, 0.8); color: #fff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; width: 100%;"></textarea>
+                        <textarea id="announcementContent" rows="5" placeholder="İşletme sahiplerine iletmek istediğiniz duyuruyu buraya yazın..." required style="background: rgba(15, 23, 42, 0.8); color: #fff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; width: 100%;"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" onclick="closeNewAnnouncementModal()" class="btn-secondary">Vazgeç</button>
-                    <button type="submit" class="btn-primary">Duyuruyu Dükkan Sahiplerine Gönder</button>
+                    <button type="submit" class="btn-primary">Duyuruyu İşletme Sahiplerine Gönder</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- YENİ DÜKKAN EKLEME MODALI -->
+    <!-- YENİ İŞLETME EKLEME MODALI -->
     <div id="newShopModal" class="modal-backdrop" style="display: none;">
         <div class="modal-box glass-card">
             <div class="modal-header">
-                <h2>Yeni Dükkan & Sahip Hesabı Tanımla</h2>
+                <h2>Yeni İşletme & Sahip Hesabı Tanımla</h2>
                 <button onclick="closeNewShopModal()" class="btn-close">&times;</button>
             </div>
             <form id="newShopForm" onsubmit="handleCreateShop(event)">
                 <div class="modal-body">
-                    <h4 class="section-divider">🏪 Dükkan Bilgileri</h4>
+                    <h4 class="section-divider">🏪 İşletme Bilgileri</h4>
                     <div class="form-group">
-                        <label>Dükkan Adı *</label>
+                        <label>İşletme Adı *</label>
                         <input type="text" id="shopName" placeholder="Örn: Lezzet Çay & Tost Evi" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Dükkan Telefonu</label>
+                            <label>İşletme Telefonu</label>
                             <input type="text" id="shopPhone" placeholder="Örn: 05321112233">
                         </div>
                         <div class="form-group">
@@ -244,9 +244,9 @@
                         </div>
                     </div>
 
-                    <h4 class="section-divider mt-4">👤 Dükkan Sahibi Giriş Bilgileri</h4>
+                    <h4 class="section-divider mt-4">👤 İşletme Sahibi Giriş Bilgileri</h4>
                     <div class="form-group">
-                        <label>Dükkan Sahibinin Adı Soyadı *</label>
+                        <label>İşletme Sahibinin Adı Soyadı *</label>
                         <input type="text" id="ownerFullName" placeholder="Örn: Ahmet Usta" required>
                     </div>
                     <div class="form-row">
@@ -262,7 +262,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" onclick="closeNewShopModal()" class="btn-secondary">Vazgeç</button>
-                    <button type="submit" class="btn-primary">Dükkanı ve Hesabı Oluştur</button>
+                    <button type="submit" class="btn-primary">İşletmeyi ve Hesabı Oluştur</button>
                 </div>
             </form>
         </div>

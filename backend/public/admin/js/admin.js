@@ -96,7 +96,7 @@ async function checkSession() {
 
 async function loadShops() {
     const tableBody = document.getElementById('shopsTableBody');
-    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Dükkanlar yükleniyor...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">İşletmeler yükleniyor...</td></tr>';
 
     try {
         const res = await fetch(`${API_BASE}/superadmin/shops.php`, {
@@ -138,7 +138,7 @@ function updateStats(shops) {
 function renderShops(shops) {
     const tableBody = document.getElementById('shopsTableBody');
     if (shops.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Henüz kayıtlı bir dükkan bulunmuyor.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Henüz kayıtlı bir işletme bulunmuyor.</td></tr>';
         return;
     }
 
@@ -204,11 +204,11 @@ async function handleCreateShop(e) {
 
         const data = await res.json();
         if (!res.ok || !data.success) {
-            throw new Error(data.message || 'Dükkan oluşturulamadı.');
+            throw new Error(data.message || 'İşletme oluşturulamadı.');
         }
 
         closeNewShopModal();
-        showToast('Dükkan ve sahip hesabı başarıyla oluşturuldu!');
+        showToast('İşletme ve sahip hesabı başarıyla oluşturuldu!');
         loadShops();
     } catch (err) {
         alert('Hata: ' + err.message);
@@ -218,8 +218,8 @@ async function handleCreateShop(e) {
 async function toggleShopStatus(shopId, currentStatus) {
     const nextStatus = parseInt(currentStatus) === 1 ? 0 : 1;
     const confirmMsg = nextStatus === 0 
-        ? 'Bu dükkanı dondurmak istediğinize emin misiniz? (Dükkan sahibi ve müşterileri giriş yapamaz)'
-        : 'Bu dükkanı aktifleştirmek istediğinize emin misiniz?';
+        ? 'Bu işletmeyi dondurmak istediğinize emin misiniz? (İşletme sahibi ve müşterileri giriş yapamaz)'
+        : 'Bu işletmeyi aktifleştirmek istediğinize emin misiniz?';
 
     if (!confirm(confirmMsg)) return;
 
@@ -236,7 +236,7 @@ async function toggleShopStatus(shopId, currentStatus) {
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message);
 
-        showToast('Dükkan durumu güncellendi.');
+        showToast('İşletme durumu güncellendi.');
         loadShops();
     } catch (err) {
         alert('Hata: ' + err.message);
@@ -244,7 +244,7 @@ async function toggleShopStatus(shopId, currentStatus) {
 }
 
 async function deleteShop(shopId, shopName) {
-    if (!confirm(`"${shopName}" dükkanını ve ona bağlı TÜM ürün, müşteri ve siparişleri silmek istediğinize emin misiniz? Bu işlem geri alınamaz!`)) {
+    if (!confirm(`"${shopName}" işletmesini ve ona bağlı TÜM ürün, müşteri ve siparişleri silmek istediğinize emin misiniz? Bu işlem geri alınamaz!`)) {
         return;
     }
 
@@ -257,7 +257,7 @@ async function deleteShop(shopId, shopName) {
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message);
 
-        showToast('Dükkan başarıyla silindi.');
+        showToast('İşletme başarıyla silindi.');
         loadShops();
     } catch (err) {
         alert('Hata: ' + err.message);
@@ -329,7 +329,7 @@ function renderAnnouncements(list) {
     }
 
     tableBody.innerHTML = list.map(a => {
-        let targetBadge = '<span class="badge badge-primary">🏪 Dükkan Sahipleri</span>';
+        let targetBadge = '<span class="badge badge-primary">🏪 İşletme Sahipleri</span>';
         if (a.target_role === 'ALL') targetBadge = '<span class="badge badge-success">🌐 Herkes</span>';
         if (a.target_role === 'CUSTOMER') targetBadge = '<span class="badge badge-warning">👥 Müşteriler</span>';
 
@@ -378,7 +378,7 @@ async function handleCreateAnnouncement(e) {
         }
 
         closeNewAnnouncementModal();
-        showToast('Duyuru tüm dükkan sahiplerine başarıyla iletildi!');
+        showToast('Duyuru tüm işletme sahiplerine başarıyla iletildi!');
         loadAnnouncements();
     } catch (err) {
         alert('Hata: ' + err.message);

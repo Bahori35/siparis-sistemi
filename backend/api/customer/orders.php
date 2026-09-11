@@ -89,13 +89,13 @@ if ($method === 'POST') {
 
         if (!$isOpenManual) {
             $db->rollBack();
-            $msg = $closedNote !== '' ? $closedNote : 'Dükkan şu anda sipariş alımına kapalıdır.';
+            $msg = $closedNote !== '' ? $closedNote : 'İşletme şu anda sipariş alımına kapalıdır.';
             Response::error($msg, 400);
         }
 
         if (!$isWithinHours) {
             $db->rollBack();
-            Response::error("Dükkan mesai saatleri dışındadır. Sipariş kabul edilmiyor. (Mesai: {$openTime} - {$closeTime})", 400);
+            Response::error("İşletme mesai saatleri dışındadır. Sipariş kabul edilmiyor. (Mesai: {$openTime} - {$closeTime})", 400);
         }
 
         // Ürünleri doğrula ve güncel dükkan fiyatlarını hesapla (Güvenlik: Fiyat frontend'den alınmaz!)
