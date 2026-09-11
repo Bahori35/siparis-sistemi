@@ -211,6 +211,7 @@ class AppLocale {
       'cancel_reason_label': 'İptal Nedeni / Müşteri Bilgilendirmesi',
       'cancel_reason_hint': 'Örn: Ürün tükendi, yoğunluk nedeniyle hazırlanamıyor vb.',
       'cancel_reason_prefix': 'İptal Nedeni',
+      'default_cancel_reason': 'Dükkan tarafından iptal edildi.',
       'confirm_cancel_btn': 'Siparişi İptal Et',
     },
 
@@ -406,6 +407,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -601,6 +603,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -796,6 +799,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -991,6 +995,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -1186,6 +1191,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -1381,6 +1387,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -1576,6 +1583,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -1771,6 +1779,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -1966,6 +1975,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -2161,6 +2171,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -2356,6 +2367,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -2551,6 +2563,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -2746,6 +2759,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -2941,6 +2955,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
 
@@ -3136,6 +3151,7 @@ class AppLocale {
       'cancel_reason_label': 'Cancellation Reason / Customer Note',
       'cancel_reason_hint': 'e.g., Out of stock, temporarily unavailable, etc.',
       'cancel_reason_prefix': 'Cancellation Reason',
+      'default_cancel_reason': 'Cancelled by the shop.',
       'confirm_cancel_btn': 'Cancel Order',
     },
   };

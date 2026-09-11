@@ -4,7 +4,7 @@ import time
 import os
 import zipfile
 
-TOKEN = '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'
+TOKEN = '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'
 REPO = 'Bahori35/siparis-sistemi'
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
