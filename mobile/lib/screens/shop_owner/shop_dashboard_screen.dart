@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../../services/auth_service.dart';
 import '../../services/app_localizations.dart';
 import '../../constants.dart';
@@ -26,6 +28,9 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
   Map<String, dynamic>? _shopSettings;
   bool _isLoading = false;
   Timer? _liveTimer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  final Set<int> _knownOrderIds = {};
+  bool _isInitialOrderLoad = true;
 
   @override
   void initState() {
@@ -40,7 +45,57 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
   @override
   void dispose() {
     _liveTimer?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  /// Yeni sipariş geldiğinde bildirim.mp3 sesini 2 defa çalar ve cihazı titretir
+  Future<void> _playNewOrderNotification() async {
+    try {
+      // 1. Çalma ve Titreşim
+      HapticFeedback.vibrate();
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource('bildirim.mp3'));
+
+      // Sesin bitmesini veya kısa bir aralığı bekle (bildirim sesi ortalama 1-2 saniye)
+      await Future.delayed(const Duration(milliseconds: 1400));
+      HapticFeedback.vibrate();
+
+      // 2. Çalma ve Titreşim (Tekrar)
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource('bildirim.mp3'));
+      await Future.delayed(const Duration(milliseconds: 400));
+      HapticFeedback.vibrate();
+    } catch (e) {
+      debugPrint('Bildirim sesi/titreşim hatası: $e');
+    }
+  }
+
+  void _checkAndTriggerNewOrderNotification(List<dynamic> newOrders) {
+    if (_isInitialOrderLoad) {
+      for (final ord in newOrders) {
+        final id = int.tryParse(ord['id']?.toString() ?? '');
+        if (id != null) _knownOrderIds.add(id);
+      }
+      _isInitialOrderLoad = false;
+      return;
+    }
+
+    bool hasNewIncomingOrder = false;
+    for (final ord in newOrders) {
+      final id = int.tryParse(ord['id']?.toString() ?? '');
+      if (id != null && !_knownOrderIds.contains(id)) {
+        _knownOrderIds.add(id);
+        // Eğer sipariş PENDING veya yeni ise bildirim ver
+        if (ord['status'] == 'PENDING' || ord['status'] == null) {
+          hasNewIncomingOrder = true;
+        }
+      }
+    }
+
+    if (hasNewIncomingOrder) {
+      _playNewOrderNotification();
+    }
   }
 
   Future<void> _fetchLiveDataSilently() async {
@@ -58,6 +113,7 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
       final ordRes = await http.get(Uri.parse(ApiConfig.shopOrders), headers: headers);
       if (ordRes.statusCode == 200 && mounted) {
         final newOrders = jsonDecode(ordRes.body)['data'] ?? [];
+        _checkAndTriggerNewOrderNotification(newOrders);
         if (jsonEncode(_orders) != jsonEncode(newOrders)) {
           setState(() {
             _orders = newOrders;
@@ -111,7 +167,16 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
 
       if (mounted) {
         setState(() {
-          if (ordRes.statusCode == 200) _orders = jsonDecode(ordRes.body)['data'] ?? [];
+          if (ordRes.statusCode == 200) {
+            _orders = jsonDecode(ordRes.body)['data'] ?? [];
+            if (_isInitialOrderLoad) {
+              for (final ord in _orders) {
+                final id = int.tryParse(ord['id']?.toString() ?? '');
+                if (id != null) _knownOrderIds.add(id);
+              }
+              _isInitialOrderLoad = false;
+            }
+          }
           if (prodRes.statusCode == 200) _products = jsonDecode(prodRes.body)['data'] ?? [];
           if (catRes.statusCode == 200) _categories = jsonDecode(catRes.body)['data'] ?? [];
           if (custRes.statusCode == 200) _customers = jsonDecode(custRes.body)['data'] ?? [];

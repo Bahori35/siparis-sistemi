@@ -40,7 +40,7 @@ jobs:
           rm -rf mobile
           flutter create --org com.ibrahimabi.orderapp --project-name order_app mobile
           cd mobile
-          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2
+          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2 audioplayers:^6.0.0
           flutter pub add --dev flutter_launcher_icons:^0.13.1
           cp -r /tmp/mobile_src/lib/* lib/
           mkdir -p assets
@@ -48,9 +48,9 @@ jobs:
           rm -f test/widget_test.dart
 
           # Add assets properly to flutter section in pubspec.yaml
-          sed -i 's/# assets:/assets:\n    - assets\/logo.png\n    - assets\/app_icon_padded.png/' pubspec.yaml
+          sed -i 's/# assets:/assets:\n    - assets\/logo.png\n    - assets\/app_icon_padded.png\n    - assets\/bildirim.mp3\n    - assets\/bildirim.mpeg/' pubspec.yaml
           if ! grep -q "assets/logo.png" pubspec.yaml; then
-            printf "\nflutter:\n  assets:\n    - assets/logo.png\n    - assets/app_icon_padded.png\n" >> pubspec.yaml
+            printf "\nflutter:\n  assets:\n    - assets/logo.png\n    - assets/app_icon_padded.png\n    - assets/bildirim.mp3\n    - assets/bildirim.mpeg\n" >> pubspec.yaml
           fi
 
           echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml
@@ -65,7 +65,7 @@ jobs:
 
           # Add Permissions, HTTP cleartext traffic & App Label to AndroidManifest.xml
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i 's/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">\n    <uses-permission android:name="android.permission.INTERNET"\/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"\/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"\/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>/' $MANIFEST
+          sed -i 's/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">/<manifest xmlns:android="http:\/\/schemas.android.com\/apk\/res\/android">\n    <uses-permission android:name="android.permission.INTERNET"\/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"\/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"\/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>\n    <uses-permission android:name="android.permission.VIBRATE"\/>/' $MANIFEST
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $MANIFEST
           sed -i 's/android:label="order_app"/android:label="Hızlı ve Micro Sipariş"/' $MANIFEST
 
@@ -134,7 +134,7 @@ jobs:
           rm -rf mobile
           flutter create --platforms=ios --org com.ibrahimabi.orderapp --project-name order_app mobile
           cd mobile
-          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2
+          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2 audioplayers:^6.0.0
           flutter pub add --dev flutter_launcher_icons:^0.13.1
           cp -r /tmp/mobile_src/lib/* lib/
           mkdir -p assets
@@ -142,9 +142,9 @@ jobs:
           rm -f test/widget_test.dart
 
           # Add assets properly to flutter section in pubspec.yaml
-          sed -i '' 's/# assets:/assets:\n    - assets\/logo.png\n    - assets\/app_icon_padded.png/' pubspec.yaml
+          sed -i '' 's/# assets:/assets:\n    - assets\/logo.png\n    - assets\/app_icon_padded.png\n    - assets\/bildirim.mp3\n    - assets\/bildirim.mpeg/' pubspec.yaml
           if ! grep -q "assets/logo.png" pubspec.yaml; then
-            printf "\nflutter:\n  assets:\n    - assets/logo.png\n    - assets/app_icon_padded.png\n" >> pubspec.yaml
+            printf "\nflutter:\n  assets:\n    - assets/logo.png\n    - assets/app_icon_padded.png\n    - assets/bildirim.mp3\n    - assets/bildirim.mpeg\n" >> pubspec.yaml
           fi
 
           echo 'flutter_launcher_icons:' > flutter_launcher_icons.yaml

@@ -12,6 +12,8 @@ dependencies:
   http: ^1.2.0
   provider: ^6.1.2
   shared_preferences: ^2.2.3
+  image_picker: ^1.1.2
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +22,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/logo.png
+    - assets/app_icon_padded.png
+    - assets/bildirim.mp3
+    - assets/bildirim.mpeg

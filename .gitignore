@@ -15,3 +15,9 @@ mobile/*.iml
 
 # Backend
 backend/vendor/
+
+# Local build helpers
+track_build.py
+download_apk.py
+token.txt
+build_output/
