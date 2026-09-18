@@ -69,14 +69,22 @@ jobs:
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $MANIFEST
           sed -i 's/android:label="order_app"/android:label="Hızlı ve Micro Sipariş"/' $MANIFEST
 
-          # Fix Gradle Maven Central / Google Repositories 403 Forbidden & Kotlin/SDK 34 compatibility
+          # Fix Gradle Maven Central / Google Repositories 403 Forbidden & enforce compileSdkVersion 34 on all subprojects
           sed -i 's/mavenCentral()/google()\n        mavenCentral()\n        maven { url "https:\/\/plugins.gradle.org\/m2\/" }/g' android/build.gradle || true
           sed -i 's/mavenCentral()/google()\n        mavenCentral()\n        maven { url "https:\/\/plugins.gradle.org\/m2\/" }/g' android/settings.gradle || true
-          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.22"/' android/build.gradle || true
-          sed -i 's/compileSdk = .*/compileSdk = 34/' android/app/build.gradle || true
-          sed -i 's/targetSdk = .*/targetSdk = 34/' android/app/build.gradle || true
-          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/' android/app/build.gradle || true
-          sed -i 's/targetSdkVersion .*/targetSdkVersion 34/' android/app/build.gradle || true
+          
+          # Inject subprojects configuration to force compileSdkVersion 34 on all plugins (audioplayer etc.)
+          cat << 'EOF' >> android/build.gradle
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdkVersion 34
+            }
+        }
+    }
+}
+EOF
 
       - name: Build Android APK
         working-directory: mobile
