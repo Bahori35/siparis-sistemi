@@ -40,7 +40,7 @@ jobs:
           rm -rf mobile
           flutter create --org com.ibrahimabi.orderapp --project-name order_app mobile
           cd mobile
-          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2 audioplayers:^6.0.0 flutter_background_service:^5.0.5 flutter_local_notifications:^17.2.1
+          flutter pub add http:^1.2.0 provider:^6.1.2 shared_preferences:^2.2.3 image_picker:^1.1.2 audioplayers:^6.0.0 flutter_background_service:^5.0.5 flutter_local_notifications:^17.2.1 vibration:^2.0.1
           flutter pub add --dev flutter_launcher_icons:^0.13.1
           cp -r /tmp/mobile_src/lib/* lib/
           mkdir -p assets

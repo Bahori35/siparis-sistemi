@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:vibration/vibration.dart';
 import '../../services/auth_service.dart';
 import '../../services/app_localizations.dart';
 import '../../constants.dart';
@@ -49,23 +50,29 @@ class _ShopDashboardScreenState extends State<ShopDashboardScreen> {
     super.dispose();
   }
 
-  /// Yeni sipariş geldiğinde bildirim.mp3 sesini 2 defa çalar ve cihazı titretir
+  /// Yeni sipariş geldiğinde bildirim.mp3 sesini 2 defa çalar ve cihazı güçlü bir şekilde titretir
   Future<void> _playNewOrderNotification() async {
     try {
-      // 1. Çalma ve Titreşim
-      HapticFeedback.vibrate();
+      // 1. Çalma ve Güçlü Donanımsal Titreşim (800ms)
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(duration: 800);
+      } else {
+        HapticFeedback.heavyImpact();
+      }
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('bildirim.mp3'));
 
-      // Sesin bitmesini veya kısa bir aralığı bekle (bildirim sesi ortalama 1-2 saniye)
+      // Sesin bitmesini veya kısa bir aralığı bekle (bildirim sesi ortalama 1.4 saniye)
       await Future.delayed(const Duration(milliseconds: 1400));
-      HapticFeedback.vibrate();
 
-      // 2. Çalma ve Titreşim (Tekrar)
+      // 2. Çalma ve Titreşim (Tekrar - 800ms)
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(duration: 800);
+      } else {
+        HapticFeedback.heavyImpact();
+      }
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('bildirim.mp3'));
-      await Future.delayed(const Duration(milliseconds: 400));
-      HapticFeedback.vibrate();
     } catch (e) {
       debugPrint('Bildirim sesi/titreşim hatası: $e');
     }

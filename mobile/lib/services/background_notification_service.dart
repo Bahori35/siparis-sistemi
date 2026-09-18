@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
+import 'package:vibration/vibration.dart';
 import '../constants.dart';
 
 final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
@@ -83,24 +84,30 @@ void onBackgroundServiceStart(ServiceInstance service) async {
 
   Future<void> playAlertSoundAndVibrate() async {
     try {
-      HapticFeedback.vibrate();
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(duration: 800);
+      } else {
+        HapticFeedback.heavyImpact();
+      }
       await bgAudioPlayer.stop();
       await bgAudioPlayer.play(AssetSource('bildirim.mp3'));
 
       await Future.delayed(const Duration(milliseconds: 1400));
-      HapticFeedback.vibrate();
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(duration: 800);
+      } else {
+        HapticFeedback.heavyImpact();
+      }
 
       await bgAudioPlayer.stop();
       await bgAudioPlayer.play(AssetSource('bildirim.mp3'));
-      await Future.delayed(const Duration(milliseconds: 400));
-      HapticFeedback.vibrate();
     } catch (e) {
       debugPrint('Background audio error: $e');
     }
   }
 
   Future<void> showAlertNotification({required int id, required String title, required String body}) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'order_alerts_channel',
       'Sipariş ve Duyuru Bildirimleri',
       channelDescription: 'Yeni sipariş ve duyuru alarmları',
@@ -108,6 +115,7 @@ void onBackgroundServiceStart(ServiceInstance service) async {
       priority: Priority.high,
       ticker: 'ticker',
       enableVibration: true,
+      vibrationPattern: Int64List.fromList([0, 800, 400, 800]),
       fullScreenIntent: true,
     );
 
@@ -115,7 +123,7 @@ void onBackgroundServiceStart(ServiceInstance service) async {
       id,
       title,
       body,
-      const NotificationDetails(android: androidDetails),
+      NotificationDetails(android: androidDetails),
     );
   }
 
