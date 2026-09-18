@@ -32,7 +32,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result['success'] == true) {
       final role = result['role'];
-      if (role != 'SHOP_OWNER' && role != 'CUSTOMER') {
+      if (role == 'SHOP_OWNER') {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const ShopDashboardScreen()),
+          (route) => false,
+        );
+      } else if (role == 'CUSTOMER') {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const CustomerMenuScreen()),
+          (route) => false,
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('super_admin_warn'.tr)),
         );
