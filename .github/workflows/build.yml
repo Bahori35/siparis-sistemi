@@ -69,22 +69,9 @@ jobs:
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $MANIFEST
           sed -i 's/android:label="order_app"/android:label="Hızlı ve Micro Sipariş"/' $MANIFEST
 
-          # Fix Gradle Maven Central / Google Repositories 403 Forbidden & enforce compileSdkVersion 34 on all subprojects
+          # Fix Gradle Maven Central / Google Repositories 403 Forbidden
           sed -i 's/mavenCentral()/google()\n        mavenCentral()\n        maven { url "https:\/\/plugins.gradle.org\/m2\/" }/g' android/build.gradle || true
           sed -i 's/mavenCentral()/google()\n        mavenCentral()\n        maven { url "https:\/\/plugins.gradle.org\/m2\/" }/g' android/settings.gradle || true
-          
-          # Inject subprojects configuration to force compileSdkVersion 34 on all plugins (audioplayer etc.)
-          cat << 'EOF' >> android/build.gradle
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                compileSdkVersion 34
-            }
-        }
-    }
-}
-EOF
 
       - name: Build Android APK
         working-directory: mobile
