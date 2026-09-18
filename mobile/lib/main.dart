@@ -3,12 +3,14 @@ import 'package:provider/provider.dart';
 import 'constants.dart';
 import 'services/auth_service.dart';
 import 'services/app_localizations.dart';
+import 'services/background_notification_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/shop_owner/shop_dashboard_screen.dart';
 import 'screens/customer/customer_menu_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeBackgroundService();
   final authService = AuthService();
   final isAuth = await authService.initAuth();
 

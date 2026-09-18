@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
@@ -23,6 +24,13 @@ class AuthService extends ChangeNotifier {
     final userJson = prefs.getString('auth_user');
     if (userJson != null) {
       _user = jsonDecode(userJson);
+      if (_user?['role'] == 'SHOP_OWNER') {
+        final service = FlutterBackgroundService();
+        final isRunning = await service.isRunning();
+        if (!isRunning) {
+          await service.startService();
+        }
+      }
     }
     notifyListeners();
     return isAuthenticated;
@@ -52,6 +60,14 @@ class AuthService extends ChangeNotifier {
         await prefs.setString('auth_token', _token!);
         await prefs.setString('auth_user', jsonEncode(_user));
 
+        if (_user?['role'] == 'SHOP_OWNER') {
+          final service = FlutterBackgroundService();
+          final isRunning = await service.isRunning();
+          if (!isRunning) {
+            await service.startService();
+          }
+        }
+
         _isLoading = false;
         notifyListeners();
         return {'success': true, 'role': _user?['role']};
@@ -73,6 +89,10 @@ class AuthService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('auth_user');
+    
+    final service = FlutterBackgroundService();
+    service.invoke('stopService');
+
     notifyListeners();
   }
 }
