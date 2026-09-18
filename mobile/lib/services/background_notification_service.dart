@@ -44,9 +44,26 @@ Future<void> initializeBackgroundService() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  await _localNotifications.initialize(
-    const InitializationSettings(android: initializationSettingsAndroid),
+  const DarwinInitializationSettings initializationSettingsDarwin =
+      DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
   );
+
+  await _localNotifications.initialize(
+    const InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsDarwin,
+    ),
+  );
+
+  // Android 13+ (Tiramisu ve üzeri) için ekrana resmi "Bildirim İzni Ver/Verme" diyaloğunu getir
+  final androidPlugin = _localNotifications
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+  if (androidPlugin != null) {
+    await androidPlugin.requestNotificationsPermission();
+  }
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
